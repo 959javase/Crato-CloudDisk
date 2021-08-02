@@ -1,13 +1,8 @@
 <template>
   <div class="side-menu-wrapper">
     <!-- collapse 属性：控制菜单收缩展开 -->
-    <el-menu
-      class="side-menu"
-      :default-active="activeIndex"
-      :router="true"
-      :collapse="isCollapse"    
-      text-color="#000"
-    >
+    <el-menu class="side-menu" :default-active="activeIndex" :router="true" :collapse="isCollapse"
+      text-color="#000">
       <el-menu-item index="0" :route="{ name: 'File', query: { fileType: 0, filePath: '/' } }">
         <!-- 图标均来自 Element UI 官方图标库 https://element.eleme.cn/#/zh-CN/component/icon -->
         <i class="el-icon-menu"></i>
@@ -40,15 +35,9 @@
     </el-menu>
     <!-- 存储信息显示 -->
     <div class="storage-wrapper" :class="{ fold: isCollapse }">
-      <el-progress
-        :percentage="storagePercentage"
-        :color="storageColor"
-        :show-text="false"
-        :type="isCollapse ? 'circle' : 'line'"
-        :width="32"
-        :stroke-width="isCollapse ? 4 : 6"
-        stroke-linecap="square"
-      ></el-progress>
+      <el-progress :percentage="storagePercentage" :color="storageColor" :show-text="false"
+        :type="isCollapse ? 'circle' : 'line'" :width="32" :stroke-width="isCollapse ? 4 : 6"
+        stroke-linecap="square"></el-progress>
       <div class="text" v-show="!isCollapse">
         <span>存储</span>
         <span>{{ storageValue | storageTrans }} / {{ storageMaxValue | storageTrans(true) }}</span>
@@ -61,8 +50,8 @@
     <el-tooltip effect="dark" :content="isCollapse ? '展开' : '收起'" placement="right">
       <div class="aside-title" @click="isCollapse ? (isCollapse = false) : (isCollapse = true)">
         <div class="top"></div>
-        <i class="icon el-icon-d-arrow-right" v-if="isCollapse" title="展开"></i>
-        <i class="icon el-icon-d-arrow-left" v-else title="收起"></i>
+        <i class="icon el-icon-d-arrow-right" v-if="isCollapse" title="展开" size="50"></i>
+        <i class="icon el-icon-d-arrow-left" v-else title="收起" size="50"></i>
         <div class="bottom"></div>
       </div>
     </el-tooltip>
@@ -80,8 +69,8 @@ export default {
       storageColor: [
         { color: '#67C23A', percentage: 50 },
         { color: '#E6A23C', percentage: 80 },
-        { color: '#F56C6C', percentage: 100 }
-      ]
+        { color: '#F56C6C', percentage: 100 },
+      ],
     }
   },
   computed: {
@@ -92,131 +81,106 @@ export default {
     // 存储容量
     storageValue() {
       //getstorage
-     // console.log(this.$store.state.sideMenu.storageValue);
+      // console.log(this.$store.state.sideMenu.storageValue);
       return this.$store.state.sideMenu.storageValue
     },
-      maxStorageValue() {  
-    
+    maxStorageValue() {
       return this.$store.state.sideMenu.maxStorage
     },
     // 存储百分比
     storagePercentage() {
       return (this.storageValue / this.maxStorageValue) * 100
-    }
+    },
   },
   watch: {
     // 监听收缩状态变化，存储在sessionStorage中，保证页面刷新时仍然保存设置的状态
     isCollapse(newValue) {
       this.setCookies('isCollapse', newValue)
-    }
+    },
   },
   created() {
     this.isCollapse = this.getCookies('isCollapse') === 'true' //  读取保存的状态
-  }
+  },
 }
 </script>
 
 <style lang="stylus" scoped>
-@import '~@/assets/styles/varibles.styl';
-@import '~@/assets/styles/mixins.styl';
-
-.side-menu-wrapper {
-  position: relative;
-  height: calc(100vh - 61px);
-  padding-right: 11px;
-
-  .side-menu {
+@import '~@/assets/styles/varibles.styl'
+@import '~@/assets/styles/mixins.styl'
+.side-menu-wrapper
+  border: 1px red solid
+  position: relative
+  height: calc(100vh - 77px)
+  padding-right: 11px
+  margin-top: 15px
+  margin-left: 30px
+  .side-menu
+    border: 1px green solid
     // 高度设置为屏幕高度减去顶部导航栏的高度
-    height: calc(100vh - 127px);
-    overflow: auto;
+    height: calc(100vh - 137px)
+    overflow: auto
     // 调整滚动条样式
-    setScrollbar(6px, #909399, #EBEEF5);
-  }
-
+    setScrollbar(6px, #909399, #EBEEF5)
   // 对展开状态下的菜单设置宽度
-  .side-menu:not(.el-menu--collapse) {
-    width: 200px;
-  }
-
+  .side-menu:not(.el-menu--collapse)
+    width: 200px
   // 存储空间展示区
-  .storage-wrapper {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    box-sizing: border-box;
-
-    width: calc(100% - 12px);
-    height: 66px;
-    padding: 16px;
-    z-index: 2;
-
-
-    .text {
-      margin-top: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 14px;
-    }
-  }
-
-  .storage-wrapper.fold {
-    padding: 0;
-
-    >>> .el-progress--circle {
-      margin: 0 auto;
-      width: 32px;
-      display: block;
-    }
-
-    .text {
-      font-size: 12px;
-      justify-content: center;
-    }
-  }
-
+  .storage-wrapper
+    border : 1px yellow solid
+    position: absolute
+    bottom: 0
+    left: 0
+    box-sizing: border-box
+    width: calc(100% - 12px)
+    height: 66px
+    padding: 16px
+    z-index: 2
+    .text
+      margin-top: 8px
+      display: flex
+      justify-content: space-between
+      align-items: center
+      font-size: 14px
+  .storage-wrapper.fold
+    padding: 0
+    >>> .el-progress--circle
+      margin: 0 auto
+      width: 32px
+      display: block
+    .text
+      font-size: 12px
+      justify-content: center
   // 折叠图标调整样式
-  .aside-title {
-    position: absolute;
-    top: calc(50% - 50px);
-    right: 0;
-    z-index: 3;
-
-    color: $BorderLight;
-    width: 12px;
-    height: 100px;
-    line-height: 100px;
-    cursor: pointer;
-
+  .aside-title
+    position: absolute
+    top: calc(50% - 50px)
+    right: 0
+    z-index: 3
+    color: $BorderLight
+    width: 12px
+    height: 100px
+    line-height: 100px
+    cursor: pointer
     // transition left 0.5s
     // -webkit-transition left 0.5s
-    &:hover {
-      opacity: 0.7;
-    }
-
-    .icon {
-      font-size: 12px;
-    }
-
-    .top {
-      position: absolute;
-      top: calc(50% - 50px);
-      right: 0px;
-      width: 0;
-      height: 0;
-      border-bottom: 12px solid transparent;
-      border-right: 12px solid #fff;
-    }
-
-    .bottom {
-      position: absolute;
-      top: calc(50% + 38px);
-      right: 0px;
-      width: 0;
-      height: 0;
-      border-top: 12px solid transparent;
-      border-right: 12px solid #fff;
-    }
-  }
-}
+    &:hover
+      opacity: 0.7
+    .icon
+      font-size: 12px
+    .top
+      position: absolute
+      top: calc(50% - 50px)
+      right: 0px
+      width: 0
+      height: 0
+      border-bottom: 12px solid transparent
+      border-right: 12px solid #fff
+    .bottom
+      position: absolute
+      top: calc(50% + 38px)
+      right: 0px
+      width: 0
+      height: 0
+      border-top: 12px solid transparent
+      border-right: 12px solid #fff
 </style>

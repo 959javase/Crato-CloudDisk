@@ -1,37 +1,46 @@
 <template>
   <div class="login-wrapper" id="loginBackground">
-    <div class="form-wrapper">
-      <h3 class="login-title">账号密码登陆</h3>
-      <!-- <h1 class="login-system">Crato</h1> -->
-      <!-- 登录表单 -->
-      <el-form class="login-form" ref="loginForm" :model="loginForm" :rules="loginFormRules"
-        label-width="100px" hide-required-asterisk>
-        <el-form-item prop="username">
-          <el-input prefix-icon="el-icon-mobile-phone" v-model="loginForm.phoneNumber"
-            placeholder="手机号"></el-input>
-        </el-form-item>
-        <el-form-item prop="password">
-          <el-input prefix-icon="el-icon-lock" v-model="password" placeholder="密码" show-password>
-          </el-input>
-        </el-form-item>
-        <el-form-item>
-          <drag-verify ref="dragVerifyRef" text="请按住滑块拖动解锁" successText="验证通过"
-            handlerIcon="el-icon-d-arrow-right" successIcon="el-icon-circle-check"
-            handlerBg="#F5F7FA" :width="315" :isPassing.sync="isPassing"
-            @update:isPassing="updateIsPassing"></drag-verify>
-        </el-form-item>
-        <el-form-item class="login-btn-form-item">
-          <el-button class="login-btn" type="primary" :disabled="loginBtnDisabled"
-            @click="submitForm('loginForm')">登陆</el-button>
-        </el-form-item>
-        <a href="/Register"><span style="font-size:8pt">没有账号？立即注册</span></a>
-      </el-form>
+    <div class="login-header">
+      <Header />
     </div>
+    <div class="form-content">
+      <div class="form-wrapper">
+        <h3 class="login-title">账号密码登陆</h3>
+        <!-- <h1 class="login-system">Crato</h1> -->
+        <!-- 登录表单 -->
+        <el-form class="login-form" ref="loginForm" :model="loginForm" :rules="loginFormRules"
+          label-width="100px" hide-required-asterisk>
+          <el-form-item prop="username">
+            <el-input prefix-icon="el-icon-mobile-phone" v-model="loginForm.phoneNumber"
+              placeholder="手机号"></el-input>
+          </el-form-item>
+          <el-form-item prop="password">
+            <el-input prefix-icon="el-icon-lock" v-model="password" placeholder="密码" show-password>
+            </el-input>
+          </el-form-item>
+          <el-form-item>
+            <drag-verify ref="dragVerifyRef" text="请按住滑块拖动解锁" successText="验证通过"
+              handlerIcon="el-icon-d-arrow-right" successIcon="el-icon-circle-check"
+              handlerBg="#F5F7FA" :width="315" :isPassing.sync="isPassing"
+              @update:isPassing="updateIsPassing"></drag-verify>
+          </el-form-item>
+          <el-form-item class="login-btn-form-item">
+            <el-button class="login-btn" type="primary" :disabled="loginBtnDisabled"
+              @click="submitForm('loginForm')">登陆</el-button>
+          </el-form-item>
+          <a href="#" @click="codeLogin"><span style="font-size:8pt">验证码登录</span></a>
+          <a href="/Register"><span style="font-size:8pt">没有账号？立即注册</span></a>
+        </el-form>
+      </div>
+    </div>
+
   </div>
+
 </template>
 
 <script>
 import DragVerify from '@/components/common/DragVerify.vue' //  引入滑动解锁组件
+import Header from '@/components/Header.vue'
 import { login, getToken, checkToken } from '@/request/user.js'
 import Crypto from '../common/crypto-m'
 // 配置
@@ -45,7 +54,7 @@ const config = {
 
 export default {
   name: 'Login',
-  components: { DragVerify },
+  components: { DragVerify, Header },
   data() {
     return {
       // 登录表单数据
@@ -106,6 +115,12 @@ export default {
     }
   },
   methods: {
+    /**
+     * 点击验证码登录
+     */
+    codeLogin(){
+      console.log('点击了验证码登录');
+    },
     /**
      * 滑动解锁完成 回调函数
      * @param {boolean} isPassing 解锁是否通过
@@ -205,49 +220,49 @@ export default {
 </script>
 <style lang="stylus" scoped>
 .login-wrapper
-  // height: 700px !important
-  height:calc(100vh - 51px)
-  min-height: 550px !important
-  padding-top: 50px
-  background: url('https://pan.baidu.com/static/images/16new/bg1.jpg') no-repeat
-  background-size: 100% 100%
-  width: 100% !important
-  .form-wrapper
-    width: 375px
-    height: 400px
-    min-height: 400px
-    text-align: center
-    // margin-left: 70%
-    margin: 0 auto
-    margin-top: 100px
-    border-radius: 3px
-    z-index: 9999
-    background: white
-    -webkit-box-shadow: rgba(0, 0, 0, 0.3) 0 0 50px
-    -moz-box-shadow: #000 0 0 50px
-    box-shadow: rgba(0, 0, 0, 0.3) 0 0 50px
-    .login-title
-      margin-top: 30px
-      font-weight: 800
-      color: #000
-    .login-system
-      font-weight: 300
-      color: #999
-    .login-form
-      width: 100%
-      margin-top: 10px
-      padding: 30px
-      >>> .el-form-item__content
-        margin-left: 0 !important
-      &>>> .el-input__inner
-        font-size: 16px
-      .login-btn-form-item
-        .login-btn
-          width: 100%
-        &>>> .el-button
-          padding: 10px 90px
+  height: 100vh
+  .login-header
+    width: 100%
+  .form-content
+    display: flex
+    align-items: center
+    justify-content: center
+    height: calc(100vh - 69px)
+    background: url('../assets/images/common/bg1.jpg') no-repeat
+    // background: url("https://pan.baidu.com/static/images/16new/bg1.jpg");
+    background-size: cover
+    .form-wrapper
+      width: 375px
+      height: 400px
+      min-height: 400px
+      text-align: center
+      border-radius: 3px
+      background: white
+      -webkit-box-shadow: rgba(0, 0, 0, 0.3) 0 0 50px
+      -moz-box-shadow: #000 0 0 50px
+      box-shadow: rgba(0, 0, 0, 0.3) 0 0 50px
+      .login-title
+        margin-top: 30px
+        font-weight: 800
+        color: #000
+      .login-system
+        font-weight: 300
+        color: #999
+      .login-form
+        width: 100%
+        margin-top: 10px
+        padding: 30px
+        >>> .el-form-item__content
+          margin-left: 0 !important
+        &>>> .el-input__inner
           font-size: 16px
-    .tip
-      width: 70%
-      margin-left: 86px
+        .login-btn-form-item
+          .login-btn
+            width: 100%
+          &>>> .el-button
+            padding: 10px 90px
+            font-size: 16px
+      .tip
+        width: 70%
+        margin-left: 86px
 </style>
