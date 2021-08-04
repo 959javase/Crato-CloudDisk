@@ -94,6 +94,7 @@ export default {
 
 <style lang="stylus" scoped>
 .breadcrumb-wrapper {
+  border:1px green solid
   padding: 0;
   height: 30px;
   line-height: 30px;

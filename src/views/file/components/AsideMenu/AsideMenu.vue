@@ -3,9 +3,25 @@
     <!-- collapse 属性：控制菜单收缩展开 -->
     <el-menu class="side-menu" :default-active="activeIndex" :router="true" :collapse="isCollapse"
       text-color="#000">
-      <el-menu-item index="0" :route="{ name: 'File', query: { fileType: 0, filePath: '/' } }">
-        <!-- 图标均来自 Element UI 官方图标库 https://element.eleme.cn/#/zh-CN/component/icon -->
-        <i class="el-icon-menu"></i>
+      <el-menu-item index="diskUsage" :route="{ name: 'diskUsage' }">
+        <!-- <i class="el-icon-picture"></i> -->
+        <span slot="title">大盘</span>
+      </el-menu-item>
+      <el-menu-item index="fileList" :route="{ name: 'fileList'}">
+        <!-- <i class="el-icon-picture"></i> -->
+        <span slot="title">文件列表</span>
+      </el-menu-item>
+      <el-menu-item index="account" :route="{ name: 'account' }">
+        <!-- <i class="el-icon-picture"></i> -->
+        <span slot="title">账户管理</span>
+      </el-menu-item>
+      <el-menu-item index="cost" :route="{ name: 'cost' }">
+        <!-- <i class="el-icon-picture"></i> -->
+        <span slot="title">费用管理</span>
+      </el-menu-item>
+      <!-- <el-menu-item index="0" :route="{ name: 'File', query: { fileType: 0, filePath: '/' } }"> -->
+      <!-- 图标均来自 Element UI 官方图标库 https://element.eleme.cn/#/zh-CN/component/icon -->
+      <!-- <i class="el-icon-menu"></i>
         <span slot="title">全部</span>
       </el-menu-item>
       <el-menu-item index="1" :route="{ name: 'File', query: { fileType: 1 } }">
@@ -31,10 +47,10 @@
       <el-menu-item index="6" :route="{ name: 'File', query: { fileType: 6 } }">
         <i class="el-icon-box"></i>
         <span slot="title">回收站</span>
-      </el-menu-item>
+      </el-menu-item> -->
     </el-menu>
     <!-- 存储信息显示 -->
-    <div class="storage-wrapper" :class="{ fold: isCollapse }">
+    <!-- <div class="storage-wrapper" :class="{ fold: isCollapse }">
       <el-progress :percentage="storagePercentage" :color="storageColor" :show-text="false"
         :type="isCollapse ? 'circle' : 'line'" :width="32" :stroke-width="isCollapse ? 4 : 6"
         stroke-linecap="square"></el-progress>
@@ -45,16 +61,16 @@
       <div class="text" v-show="isCollapse">
         <span>{{ storageValue | storageTrans }}</span>
       </div>
-    </div>
+    </div> -->
     <!-- 展开 & 收缩分类栏 -->
-    <el-tooltip effect="dark" :content="isCollapse ? '展开' : '收起'" placement="right">
+    <!-- <el-tooltip  :content="isCollapse ? '展开' : '收起'" placement="right">
       <div class="aside-title" @click="isCollapse ? (isCollapse = false) : (isCollapse = true)">
         <div class="top"></div>
         <i class="icon el-icon-d-arrow-right" v-if="isCollapse" title="展开" size="50"></i>
         <i class="icon el-icon-d-arrow-left" v-else title="收起" size="50"></i>
         <div class="bottom"></div>
       </div>
-    </el-tooltip>
+    </el-tooltip> -->
   </div>
 </template>
 
@@ -76,21 +92,22 @@ export default {
   computed: {
     // 当前激活菜单的 index
     activeIndex() {
-      return String(this.$route.query.fileType) //  获取当前路由参数中包含的文件类型
+      // return String(this.$route.query.fileType) //  获取当前路由参数中包含的文件类型
+      return String(this.$route.name)
     },
     // 存储容量
-    storageValue() {
-      //getstorage
-      // console.log(this.$store.state.sideMenu.storageValue);
-      return this.$store.state.sideMenu.storageValue
-    },
-    maxStorageValue() {
-      return this.$store.state.sideMenu.maxStorage
-    },
+    // storageValue() {
+    //   //getstorage
+    //   // console.log(this.$store.state.sideMenu.storageValue);
+    //   return this.$store.state.sideMenu.storageValue
+    // },
+    // maxStorageValue() {
+    //   return this.$store.state.sideMenu.maxStorage
+    // },
     // 存储百分比
-    storagePercentage() {
-      return (this.storageValue / this.maxStorageValue) * 100
-    },
+    // storagePercentage() {
+    //   return (this.storageValue / this.maxStorageValue) * 100
+    // },
   },
   watch: {
     // 监听收缩状态变化，存储在sessionStorage中，保证页面刷新时仍然保存设置的状态
@@ -100,6 +117,7 @@ export default {
   },
   created() {
     this.isCollapse = this.getCookies('isCollapse') === 'true' //  读取保存的状态
+    console.log(this.$route.name)
   },
 }
 </script>
@@ -109,29 +127,35 @@ export default {
 @import '~@/assets/styles/mixins.styl'
 .side-menu-wrapper
   border: 1px red solid
-  position: relative
+  display :flex
+  flex-direction :column
+  overflow :hidden
+  // position: relative
   height: calc(100vh - 77px)
-  padding-right: 11px
+  width :200px
+  // padding-right: 11px
   margin-top: 15px
-  margin-left: 30px
+  // margin-left: 30px
   .side-menu
     border: 1px green solid
     // 高度设置为屏幕高度减去顶部导航栏的高度
     height: calc(100vh - 137px)
+    width :100%
     overflow: auto
     // 调整滚动条样式
     setScrollbar(6px, #909399, #EBEEF5)
   // 对展开状态下的菜单设置宽度
-  .side-menu:not(.el-menu--collapse)
-    width: 200px
+  // .side-menu:not(.el-menu--collapse)
+  //   width: 200px
   // 存储空间展示区
   .storage-wrapper
-    border : 1px yellow solid
-    position: absolute
-    bottom: 0
-    left: 0
+    border: 1px yellow solid
+    // position: absolute
+    // bottom: 0
+    // left: 0
     box-sizing: border-box
-    width: calc(100% - 12px)
+    // width: calc(100% - 12px)
+    width: 100%
     height: 66px
     padding: 16px
     z-index: 2

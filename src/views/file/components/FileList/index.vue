@@ -504,36 +504,42 @@ export default {
 
 <style lang="stylus" scoped>
 @import '~@/assets/styles/varibles.styl';
-
-.file-list-wrapper {
-  >>> .el-header {
-    padding: 0;
-    margin-bottom: -15px;
-  }
-
-  .middle-wrapper {
-    margin-bottom: 2px;
-  }
-  .operate-group-left{
-    float: left  ;
-    margin-top:20px;
-    font-weight:bold;
-  }
-  .pagination-wrapper {
-    position: relative;
-    border-top: 1px solid $BorderBase;
-    height: 44px;
-    line-height: 44px;
-    text-align: center;
-
-    .current-page-count {
-      position: absolute;
-      left: 16px;
-      height: 32px;
-      line-height: 32px;
-      font-size: 13px;
-      color: $RegularText;
-    }
-  }
+.pagination-wrapper {
+  border: 1px black solid
+  text-align : center
 }
+.file-list-wrapper {
+  border: 1px black solid
+  }
+// .file-list-wrapper {
+//   >>> .el-header {
+//     padding: 0;
+//     margin-bottom: -15px;
+//   }
+
+//   .middle-wrapper {
+//     margin-bottom: 2px;
+//   }
+//   .operate-group-left{
+//     float: left  ;
+//     margin-top:20px;
+//     font-weight:bold;
+//   }
+//   .pagination-wrapper {
+//     position: relative;
+//     border-top: 1px solid $BorderBase;
+//     height: 44px;
+//     line-height: 44px;
+//     text-align: center;
+
+//     .current-page-count {
+//       position: absolute;
+//       left: 16px;
+//       height: 32px;
+//       line-height: 32px;
+//       font-size: 13px;
+//       color: $RegularText;
+//     }
+//   }
+// }
 </style>

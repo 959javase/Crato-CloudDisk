@@ -25,6 +25,13 @@ export default new Router({
         import(/* webpackChunkName: "register" */ '@/views/Register.vue'),
       meta: { title: 'Register' },
     },
+    {
+      path: '/serviceOpen',
+      name: 'serviceOpen',
+      component: () =>
+        import(/* webpackChunkName: "register" */ '@/views/serviceOpen'),
+      meta: { title: 'serviceOpen' },
+    },
     // {
     //   path: '/login',
     //   name: 'Login',
@@ -33,7 +40,7 @@ export default new Router({
     //   meta: { title: 'Login' },
     // },
     {
-      path:'/',
+      path: '/',
       component: Layout,
       meta: {
         requireAuth: true, //  当前路由是否需要登录才可进入
@@ -43,14 +50,32 @@ export default new Router({
         },
         breadCrumbName: 'Root',
       },
-      children:[
+      children: [
         {
-          path:'', // 默认子路由
-          name:'File',
-          component:()=> import(/* webpackChunkName: "file" */ '@/views/file/File.vue')
-        }
-      ]
-
+          path: '', // 默认子路由
+          name: 'diskUsage',
+          component: () =>
+            import(/* webpackChunkName: "file" */ '@/views/diskUsage'),
+        },
+        {
+          path: '/fileList', // 文件列表
+          name: 'fileList',
+          component: () =>
+            import(/* webpackChunkName: "file" */ '@/views/fileList'),
+        },
+        {
+          path: '/account', // 账户管理
+          name: 'account',
+          component: () =>
+            import(/* webpackChunkName: "file" */ '@/views/account'),
+        },
+        {
+          path: '/cost', // 费用管理
+          name: 'cost',
+          component: () =>
+            import(/* webpackChunkName: "file" */ '@/views/cost'),
+        },
+      ],
     },
 
     // {

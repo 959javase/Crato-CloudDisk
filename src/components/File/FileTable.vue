@@ -3,14 +3,13 @@
     <!-- 文件表格 -->
     <el-table class="file-table"
       :class="['file-type-' + fileType, routeName === 'Share' ? 'share' : routeName === 'MyShare' ? 'my-share' : '']"
-      ref="multipleTable" fit v-loading="loading" element-loading-text="loading……"
-      tooltip-effect="dark" :data="fileList" @selection-change="handleSelectRow"
-      @sort-change="handleSortChange" @cell-mouse-enter="showAction"
-      @cell-mouse-leave="removeAction">
+      ref="multipleTable" v-loading="loading" element-loading-text="loading……" tooltip-effect="dark"
+      :data="fileList" @selection-change="handleSelectRow" @sort-change="handleSortChange"
+      @cell-mouse-enter="showAction" @cell-mouse-leave="removeAction">
       <el-table-column type="selection" key="selection" width="45"></el-table-column>
       <el-table-column label prop="isDir" key="isDir" width="60" align="center">
         <template slot-scope="scope">
-          <img :src="setFileImg(scope.row)" style="width: 30px; max-height: 30px; cursor: pointer"
+          <img :src="setFileImg(scope.row)" style="width: 40px; max-height: 40px; cursor: pointer"
             @click="handleFileNameClick(scope.row, scope.$index, fileList)" />
         </template>
       </el-table-column>
@@ -57,8 +56,9 @@
       <el-table-column label="" width="180">
         <template slot-scope="scope">
           <span v-show="curRow != null && scope.row == curRow">
-            <el-button type="text" class="el-icon-download"
-              style="margin-right:10px;font-weight:800" @click="getDownloadFilePath1(scope.row)"> 下载
+            <!-- <span v-show="1"> -->
+            <el-button type="text" class="el-icon-download" style="font-weight:700"
+              @click="getDownloadFilePath1(scope.row)"> 下载
             </el-button>
             <el-dropdown @visible-change="changeValue($event)">
               <el-button split-button type="text" style="font-weight:800">
@@ -106,7 +106,7 @@
           <span v-else>Dir</span>
         </template>
       </el-table-column> -->
-      <el-table-column label="Size" width="180" prop="fileSize" key="fileSize"
+      <el-table-column label="大小" width="180" prop="fileSize" key="fileSize"
         :sort-by="['isDir', 'fileSize']" sortable show-overflow-tooltip align="right"
         v-if="selectedColumnList.includes('fileSize')">
         <template slot-scope="scope">
@@ -235,7 +235,10 @@ export default {
       required: true,
       type: Boolean,
     },
-    count: 0,
+    count: {
+      type: Number,
+      default: 0,
+    },
   },
   data() {
     return {
@@ -894,6 +897,7 @@ export default {
 .el-icon-arrow-down
   font-size: 12px
 .file-table-wrapper
+  border:  1px red solid
   .file-type-0
     height: calc(100vh - 206px) !important
     >>> .el-table__body-wrapper
@@ -922,6 +926,7 @@ export default {
         font-size: 16px
         &:hover
           color: $Primary
+          // color: red
     >>> .el-table__body-wrapper
       height: calc(100vh - 255px)
       overflow-y: auto

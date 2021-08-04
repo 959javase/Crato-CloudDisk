@@ -21,7 +21,7 @@ export default {
   name: 'App',
   components: {
     Header,
-    AsideMenu
+    AsideMenu,
   },
   computed: {
     //  头部是否显示
@@ -54,4 +54,6 @@ export default {
   // height: 100vh
   .el-header
     padding: 0
+  .el-aside
+    width: 200px !important
 </style>

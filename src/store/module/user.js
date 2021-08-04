@@ -1,11 +1,13 @@
 import globalFunction from '@/utils/globalFunction.js'
-import { checkUserLoginInfo } from "@/request/user.js"; //引入axios封装
+import { queryAccount, login, loginOut } from '@/request/user.js' //引入axios封装
+import store from '@/store'
 
 export default {
   state: {
     isLogin: false, //  用户登录状态
-    userInfoObj: {},  
-    mk:''//  用户信息
+    token: globalFunction.getCookies('token') || '', // 用户token
+    userInfoObj: sessionStorage.getItem('userInfoObj') || {}, // 用户信息
+    // mk: '', //  用户信息
   },
   mutations: {
     /**
@@ -14,7 +16,7 @@ export default {
      * @param {boolean} data 登录状态
      */
     changeIsLogin(state, data) {
-      state.isLogin = data;
+      state.isLogin = data
     },
     /**
      * 保存用户信息
@@ -22,29 +24,77 @@ export default {
      * @param {boolean} data 用户信息
      */
     changeUserInfoObj(state, data) {
-      state.userInfoObj = Object.assign({}, state.userInfoObj, data);
+      sessionStorage.setItem('userInfoObj', JSON.stringify(data))
+      state.userInfoObj = Object.assign({}, state.userInfoObj, data)
     },
-    saveMasterKey(state, data){
-      state.mk = data
-    }
+    // saveMasterKey(state, data) {
+    //   state.mk = data
+    // },
   },
   actions: {
-    /**
-     * 获取用户信息
-     */
-    getUserInfo(context) {
-      return checkUserLoginInfo().then((res) => {
-        if (res.success) {
-          // 存储文件预览域名
-          globalFunction.setCookies("viewDomain", res.data.viewDomain)
-          // 改变登录状态
-          context.commit("changeIsLogin", res.success);
-          // 保存用户信息
-          context.commit("changeUserInfoObj", res.data); 
-        } else {
-          context.commit("changeIsLogin", res.success);
+    // 账号密码登录
+    Login({ commit }, userInfo) {
+      return new Promise((resolve, reject) => {
+        login({
+          name: userInfo.name.trim(),
+          password: userInfo.password,
+        })
+          .then((res) => {
+            globalFunction.setCookies('token', res.data.token)
+            commit('changeIsLogin', true)
+            store.dispatch('getUserInfo', res.data.userId)
+            resolve()
+            // setToken(data.access_token)
+            // commit('SET_TOKEN', data.access_token)
+            // setExpiresIn(data.expires_in)
+            // commit('SET_EXPIRES_IN', data.expires_in)
+          })
+          .catch((error) => {
+            reject(error)
+          })
+      })
+    },
+    // 退出登录
+    loginOut(context) {
+      return loginOut({ username: store.state.userInfoObj.username }).then(
+        (res) => {
+          console.log(res)
         }
-      });
-    }
-  }
+      )
+    },
+    getUserInfo({ commit }, userId) {
+      return queryAccount({
+        userId,
+      }).then((res) => {
+        let { data } = res
+        let { bizCrato } = data
+        let userInfo = {
+          name: data.name,
+          userId: data.id,
+          type: data.type,
+          balance: data.balance,
+          belong: data.belong,
+          fixedSpace: bizCrato.fixedSpace,
+          used: bizCrato.used,
+          product: bizCrato.product,
+          serviceType: bizCrato.serviceType,
+        }
+        commit('changeUserInfoObj', userInfo)
+      })
+    },
+    // getUserInfo(context) {
+    //   return checkUserLoginInfo().then((res) => {
+    //     if (res.success) {
+    //       // 存储文件预览域名
+    //       globalFunction.setCookies('viewDomain', res.data.viewDomain)
+    //       // 改变登录状态
+    //       context.commit('changeIsLogin', res.success)
+    //       // 保存用户信息
+    //       context.commit('changeUserInfoObj', res.data)
+    //     } else {
+    //       context.commit('changeIsLogin', res.success)
+    //     }
+    //   })
+    // },
+  },
 }

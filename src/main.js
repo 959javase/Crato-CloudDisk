@@ -4,6 +4,10 @@ import router from './router/router'
 import store from '@/store/index.js'
 import globalFunction from '@/utils/globalFunction.js'
 import * as filters from '@/filters/index.js'
+
+import "echarts";
+
+
 import '@/assets/styles/css/base.css'
 import '@/assets/styles/css/border.css'
 import '@/assets/styles/css/element-cover.css'
@@ -18,26 +22,26 @@ import element from './element.js'
  */
 import uploader from 'vue-simple-uploader'
 // collapse 展开折叠
-import CollapseTransition from 'element-ui/lib/transitions/collapse-transition';
+import CollapseTransition from 'element-ui/lib/transitions/collapse-transition'
 
 Vue.component(CollapseTransition.name, CollapseTransition)
 
-Vue.config.productionTip = false;
+Vue.config.productionTip = false
 
-for(let key in globalFunction) {
+for (let key in globalFunction) {
   Vue.prototype[key] = globalFunction[key]
 }
 
-Vue.use(element);
-Vue.use(uploader);
+Vue.use(element)
+Vue.use(uploader)
 Vue.prototype.$EventBus = new Vue()
 
-Object.keys(filters).forEach(key => {
+Object.keys(filters).forEach((key) => {
   Vue.filter(key, filters[key])
 })
 
 new Vue({
   router,
   store,
-  render: h => h(App)
+  render: (h) => h(App),
 }).$mount('#app')

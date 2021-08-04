@@ -23,17 +23,10 @@
 </template>
 
 <script>
-import Header from '@/components/Header.vue'
-import Footer from '@/components/Footer.vue'
-import AsideMenu from '@/views/file/components/AsideMenu/AsideMenu'
+
 
 export default {
   name: 'App',
-  components: {
-    Header,
-    Footer,
-    AsideMenu,
-  },
   computed: {
     //  头部是否显示
     isHeaderShow() {

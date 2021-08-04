@@ -3,32 +3,33 @@
     <div class="login-header">
       <Header />
     </div>
-    <div class="form-content">
+    <div class="form-content" v-loading="loading">
       <div class="form-wrapper">
         <h1 class="register-title">注册账号</h1>
         <p class="register-system">Crato</p>
         <!-- 注册表单 -->
         <el-form class="register-form" ref="registerForm" :model="registerForm"
           :rules="registerFormRules" label-width="100px" hide-required-asterisk>
-          <el-form-item prop="username">
-            <el-input prefix-icon="el-icon-user" v-model="registerForm.username" placeholder="用户名">
+          <el-form-item prop="name">
+            <el-input prefix-icon="el-icon-user" v-model="registerForm.name" placeholder="用户名"
+              @change="checkName">
             </el-input>
           </el-form-item>
           <el-form-item prop="password">
             <el-input prefix-icon="el-icon-lock" v-model="registerForm.password" placeholder="密码"
               show-password></el-input>
           </el-form-item>
-          <el-form-item prop="">
-            <el-input prefix-icon="el-icon-lock" v-model="registerForm.password" placeholder="确认密码"
-              show-password></el-input>
+          <el-form-item prop="confirmPassword">
+            <el-input prefix-icon="el-icon-lock" v-model="registerForm.confirmPassword"
+              placeholder="确认密码" show-password></el-input>
           </el-form-item>
-          <el-form-item prop="telephone">
-            <el-input prefix-icon="el-icon-mobile-phone" v-model="registerForm.telephone"
-              placeholder="手机号"></el-input>
+          <el-form-item prop="mobile">
+            <el-input prefix-icon="el-icon-mobile-phone" v-model="registerForm.mobile"
+              placeholder="手机号" @change="checkMobile"></el-input>
           </el-form-item>
           <el-form-item prop="" class="phone_code">
-            <el-input prefix-icon="el-icon-mobile-phone" v-model="registerForm.phonecode"
-              placeholder="验证码" maxlength="6" :style="{width: '70%'}"></el-input>
+            <el-input prefix-icon="el-icon-lock" v-model="registerForm.phonecode" placeholder="验证码"
+              maxlength="6" :style="{width: '70%'}"></el-input>
             <GetPhoneCode />
           </el-form-item>
           <el-form-item style="user-select: none">
@@ -51,49 +52,89 @@
 <script>
 import DragVerify from '@/components/common/DragVerify.vue' //  引入滑动解锁组件
 import Header from '@/components/Header.vue'
-import { addUser } from '@/request/user.js'
-import Crypto from '../common/crypto-m'
+import { register, checkname, checkmobile, sendSms } from '@/request/user.js'
 import GetPhoneCode from '@/components/getPhoneCode'
-// 配置
-const config = {
-  color: '230, 162, 60', // 线条颜色
-  pointColor: '230, 162, 60', // 节点颜色
-  opacity: 0.5, // 线条透明度
-  count: 99, // 线条数量
-  zIndex: -1, // 画面层级
-}
 
 export default {
   name: 'Register',
   components: { DragVerify, Header, GetPhoneCode },
   data() {
     return {
+      loading: false,
+      checkNameTag: false,
+      checkMobileTag: false,
       // 注册表单
       registerForm: {
-        telephone: '',
-        username: '',
-        password: '',
-        rsa_priv_key_ba: '',
-        rsa_pub_key: '',
-        master_key_ba: '',
+        // mobile: '',
+        // name: '',
+        // password: '',
+        // confirmPassword: '',
       },
       // 注册表单校验规则
       registerFormRules: {
-        username: [
-          { required: true, message: '请输入用户名', trigger: 'blur' },
+        name: [
+          {
+            required: true,
+            message: '请输入用户名',
+            trigger: ['change', 'blur'],
+          },
         ],
         password: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
+          {
+            required: true,
+            message: '请输入密码',
+            trigger: ['change', 'blur'],
+          },
           {
             min: 5,
             max: 20,
             message: '长度在 5 到 20 个字符',
-            trigger: 'blur',
+            trigger: ['change', 'blur'],
           },
         ],
-        telephone: [
-          { required: true, message: '请输入手机号', trigger: 'blur' },
-          { min: 11, max: 11, message: '请输入11位手机号', trigger: 'blur' },
+        confirmPassword: [
+          {
+            required: true,
+            message: '请再次输入密码',
+            trigger: ['change', 'blur'],
+          },
+          {
+            validator: (rules, value, callback) => {
+              // return value === this.registerForm.password
+              if (value !== this.registerForm.password) {
+                callback(new Error('两次输入密码不一致'))
+              } else {
+                callback()
+              }
+            },
+            trigger: ['change', 'blur'],
+          },
+          {
+            validator: (rules, value, callback) => {
+              // return value === this.registerForm.password
+              if (value !== this.registerForm.password) {
+                callback(new Error('两次输入密码不一致'))
+              } else {
+                callback()
+              }
+            },
+            trigger: ['change', 'blur'],
+          },
+        ],
+        mobile: [
+          {
+            required: true,
+            message: '请输入手机号',
+            trigger: ['change', 'blur'],
+          },
+          {
+            pattern: /^(?:(?:\+|00)86)?1\d{10}$/,
+            transform(value) {
+              return String(value)
+            },
+            message: '请输入正确的手机号',
+            trigger: ['change', 'blur'],
+          },
         ],
       },
       isPassing: false, //  滑动解锁是否验证通过
@@ -108,15 +149,19 @@ export default {
   },
   watch: {
     //  滑动解锁验证通过时，若重新输入手机号、用户名或密码，滑动解锁恢复原样
-    'registerForm.telephone'() {
+    'registerForm.mobile'() {
       this.isPassing = false
       this.$refs.dragVerifyRef.reset()
     },
-    'registerForm.username'() {
+    'registerForm.name'() {
       this.isPassing = false
       this.$refs.dragVerifyRef.reset()
     },
     'registerForm.password'() {
+      this.isPassing = false
+      this.$refs.dragVerifyRef.reset()
+    },
+    'registerForm.confirmPassword'() {
       this.isPassing = false
       this.$refs.dragVerifyRef.reset()
     },
@@ -130,7 +175,7 @@ export default {
     updateIsPassing(isPassing) {
       if (isPassing) {
         //  校验手机号
-        this.$refs.registerForm.validateField('telephone', (telephoneError) => {
+        this.$refs.registerForm.validateField('mobile', (telephoneError) => {
           if (telephoneError) {
             this.submitDisabled = true
           } else {
@@ -141,64 +186,75 @@ export default {
         this.submitDisabled = true
       }
     },
+    // 校验用户名是否注册
+    checkName() {
+      this.checkname = false
+      checkname({
+        username: this.registerForm.name,
+      })
+        .then((res) => {
+          if (res.data) {
+            this.checkNameTag = true
+          } else {
+            this.$message.error(res.description)
+          }
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+    },
+    // 校验手机号是否注册
+    checkMobile() {
+      this.checkMobileTag = false
+      checkmobile({
+        mobile: this.registerForm.mobile,
+      })
+        .then((res) => {
+          if (res.data) {
+            this.checkMobileTag = true
+          } else {
+            this.$error(res.description)
+          }
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+    },
     /**
      * 注册按钮点击事件 表单验证&用户注册
      * @param {boolean} formName 表单ref值
      */
     submitForm(formName) {
-      this.$refs[formName].validate((valid) => {
-        if (valid) {
-          // 表单各项校验通过
-          const master_key = Crypto.masterKey()
-          let ps = this.registerForm.password
-          while (ps.length < 16) {
-            ps += '0'
+      if (this.checkNameTag && this.checkMobileTag) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            this.loading = true
+            // 表单各项校验通过
+            register(this.registerForm).then((res) => {
+              if (res.code === 0) {
+                this.$notify({
+                  title: '成功',
+                  message: '注册成功！已跳转到登录页面',
+                  type: 'success',
+                })
+                this.$refs[formName].resetFields()
+                this.$router.replace({ path: '/login' })
+              } else {
+                this.submitDisabled = true
+                this.isPassing = false
+                this.$refs.dragVerifyRef.reset()
+                this.$message.error(res.description)
+              }
+              this.loading = false
+            })
+          } else {
+            this.$message.error('请正确填写用户注册信息！')
+            return false
           }
-          console.log(ps)
-          this.registerForm.password = ps
-          //用户密码加密 MasterKeys
-          this.registerForm.master_key_ba = Crypto.encryptAes(
-            this.registerForm.password,
-            master_key
-          )
-          console.log(
-            Crypto.decryptAes(
-              this.registerForm.password,
-              this.registerForm.master_key_ba
-            )
-          )
-          //console.log( this.registerForm.master_key_ba);
-          //生成 RSA 对
-          const key = Crypto.getRsaKey()
-          //用 MasterKey 加密 RSA 私钥
-          this.registerForm.rsa_priv_key_ba = Crypto.encryptAes(
-            master_key,
-            key.privateKey
-          )
-
-          this.registerForm.rsa_pub_key = key.publicKey
-            .replace('-----BEGIN PUBLIC KEY-----', '')
-            .replace('-----END PUBLIC KEY-----', '')
-            .trim()
-
-          addUser(this.registerForm).then((res) => {
-            if (res.success) {
-              this.$notify({
-                title: '成功',
-                message: '注册成功！已跳转到登录页面',
-                type: 'success',
-              })
-              this.$refs[formName].resetFields()
-              this.$router.replace({ path: '/login' })
-            } else {
-              this.$message.error(res.message)
-            }
-          })
-        } else {
-          this.$message.error('请完善信息！')
-          return false
-        }
-      })
+        })
+      } else {
+        this.$message.error('用户名或手机号已注册')
+      }
     },
   },
 }
@@ -230,8 +286,8 @@ export default {
         margin-top: 20px
         >>> .el-form-item__content
           margin-left: 0 !important
-          display :flex
-          align-items :center
+          display: flex
+          align-items: center
         &>>> .el-input__inner
           font-size: 16px
         .registerButtonWrapper

@@ -1,30 +1,18 @@
 <template>
-  <div class="operation-menu-wrapper" :class="'file-type-' + fileType" >
-
-
-     <el-button-group class="operate-group" v-show="!selectionFile.length">  
-     <el-button  type="warning" round size="medium  "  @click="handleUploadFileBtnClick(true,false)">普通上传<i class="el-icon-upload el-icon--right"></i></el-button>
-       <el-button type="warning" round size="medium  "  @click="handleUploadFileBtnClick(true,true)">加密上传<i class="el-icon-upload el-icon--right"></i></el-button>
-       <el-button  round size="medium  " @click="dialogAddFolder.visible = true">新建文件夹<i class="el-icon-circle-plus el-icon--right"></i></el-button>
-     </el-button-group>
-
-    <el-button-group class="operate-group" v-show="selectionFile.length">   
- 
-      <el-button
-        size="medium"
-        :disabled="!selectionFile.length"
-        icon="el-icon-delete"
+  <div class="operation-menu-wrapper" :class="'file-type-' + fileType">
+    <el-button-group class="operate-group" v-show="!selectionFile.length">
+      <el-button type="warning" round size="medium  " @click="handleUploadFileBtnClick(true,false)">
+        普通上传<i class="el-icon-upload el-icon--right"></i></el-button>
+      <el-button type="warning" round size="medium  " @click="handleUploadFileBtnClick(true,true)">
+        加密上传<i class="el-icon-upload el-icon--right"></i></el-button>
+      <el-button round size="medium  " @click="dialogAddFolder.visible = true">新建文件夹<i
+          class="el-icon-circle-plus el-icon--right"></i></el-button>
+    </el-button-group>
+    <el-button-group class="operate-group" v-show="selectionFile.length">
+      <el-button size="medium" :disabled="!selectionFile.length" icon="el-icon-delete"
         @click="handleBatchDeleteBtnClick()">删除</el-button>
-     
-
-      <el-button
-        size="medium"
-        :disabled="!selectionFile.length"
-        icon="el-icon-rank"
-        @click="handleBatchMoveBtnClick()"
-        v-if="!fileType && fileType !== 6"
-        >移动</el-button
-      >
+      <el-button size="medium" :disabled="!selectionFile.length" icon="el-icon-rank"
+        @click="handleBatchMoveBtnClick()" v-if="!fileType && fileType !== 6">移动</el-button>
       <!-- <el-button
         size="medium"
         :disabled="!selectionFile.length"
@@ -34,50 +22,30 @@
         >下载</el-button> -->
     </el-button-group>
 
-
     <!-- 全局搜素文件 -->
-    <el-input
-      v-if="fileType === 0"
-      class="select-file-input"
-      v-model="searchFile.fileName"
-      placeholder="search"
-      size="medium"
-      round
-      maxlength="255"
-      :clearable="true"
-      @change="handleSearchInputChange"
-      @clear="$emit('getTableDataByType')"
-      @keyup.enter.native="handleSearchInputChange(searchFile.fileName)"
-    >
-      <i slot="prefix" class="el-input__icon el-icon-search" title="click to search" @click="handleSearchClick"></i>
+    <el-input v-if="fileType === 0" class="select-file-input" v-model="searchFile.fileName"
+      placeholder="search" size="medium" round maxlength="255" :clearable="true"
+      @change="handleSearchInputChange" @clear="$emit('getTableDataByType')"
+      @keyup.enter.native="handleSearchInputChange(searchFile.fileName)">
+      <i slot="prefix" class="el-input__icon el-icon-search" title="click to search"
+        @click="handleSearchClick"></i>
     </el-input>
 
-    
-
     <!-- 新建文件夹对话框 -->
-    <AddFolderDialog
-      :visible.sync="dialogAddFolder.visible"
-      :filePath="filePath"
-      @confirmDialog="$emit('getTableDataByType')"
-    ></AddFolderDialog>
+    <AddFolderDialog :visible.sync="dialogAddFolder.visible" :filePath="filePath"
+      @confirmDialog="$emit('getTableDataByType')"></AddFolderDialog>
 
     <!-- 多选文件下载，页面隐藏 -->
-    <a
-      target="_blank"
-      v-for="(item, index) in selectionFile"
-      :key="index"
-      :href="'api' + item.fileUrl"
-      :download="item.fileName + '.' + item.extendName"
-      :title="'downloadLink' + index"
-      :ref="'downloadLink' + index"
-    ></a>
+    <a target="_blank" v-for="(item, index) in selectionFile" :key="index"
+      :href="'api' + item.fileUrl" :download="item.fileName + '.' + item.extendName"
+      :title="'downloadLink' + index" :ref="'downloadLink' + index"></a>
   </div>
 </template>
 
 <script>
 import { batchDeleteFile, batchDeleteRecoveryFile } from '@/request/file.js'
 import AddFolderDialog from '@/components/File/AddFolderDialog.vue'
-import SelectColumn from './SelectColumn'
+// import SelectColumn from './SelectColumn'
 
 export default {
   name: 'OperationMenu',
@@ -85,30 +53,30 @@ export default {
     // 文件类型
     fileType: {
       required: true,
-      type: Number
+      type: Number,
     },
     // 文件路径
     filePath: {
       required: true,
-      type: String
+      type: String,
     },
     selectionFile: Array,
     operationFile: Object,
-    batchOperate: Boolean
+    batchOperate: Boolean,
   },
   components: {
     AddFolderDialog,
-    SelectColumn
+    // SelectColumn
   },
   data() {
     return {
       // 文件搜索数据
       searchFile: {
-        fileName: ''
+        fileName: '',
       },
       // 新建文件夹对话框数据
       dialogAddFolder: {
-        visible: false
+        visible: false,
       },
       batchDeleteFileDialog: false,
       fileGroupLable: 0, //  文件展示模式
@@ -120,16 +88,16 @@ export default {
       get() {
         let res = {
           filePath: this.filePath,
-          isDir: 0
+          isDir: 0,
         }
         return res
       },
       set() {
         return {
           filePath: '/',
-          isDir: 0
+          isDir: 0,
         }
-      }
+      },
     },
     // 文件查看模式 0 列表模式 1 网格模式 2 时间线模式
     fileModel() {
@@ -142,8 +110,8 @@ export default {
       },
       set(val) {
         this.$store.commit('changeGridSize', val)
-      }
-    }
+      },
+    },
   },
   watch: {
     fileType(newValue, oldValue) {
@@ -151,7 +119,7 @@ export default {
         this.$store.commit('changeFileModel', 0)
         this.fileGroupLable = 0
       }
-    }
+    },
   },
   mounted() {
     this.fileGroupLable = this.fileModel
@@ -168,8 +136,13 @@ export default {
      * @description 通过Bus通信，开启全局上传文件流程
      * @param {boolean} type 上传方式 true 直接上传  false 拖拽上传
      */
-    handleUploadFileBtnClick(type ,isEncrypto) {
-      this.$EventBus.$emit('openUploader', this.uploadFileData, type ,isEncrypto)
+    handleUploadFileBtnClick(type, isEncrypto) {
+      this.$EventBus.$emit(
+        'openUploader',
+        this.uploadFileData,
+        type,
+        isEncrypto
+      )
     },
 
     /**
@@ -182,7 +155,7 @@ export default {
         this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
-          type: 'warning'
+          type: 'warning',
         })
           .then(() => {
             this.confirmBatchDeleteFile(true)
@@ -190,7 +163,7 @@ export default {
           .catch(() => {
             this.$message({
               type: 'info',
-              message: '已取消删除'
+              message: '已取消删除',
             })
           })
       } else {
@@ -198,7 +171,7 @@ export default {
         this.$confirm('是否确认删除?, 是否继续删除?', '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
-          type: 'warning'
+          type: 'warning',
         })
           .then(() => {
             this.confirmBatchDeleteFile(false)
@@ -206,7 +179,7 @@ export default {
           .catch(() => {
             this.$message({
               type: 'info',
-              message: '已取消删除'
+              message: '已取消删除',
             })
           })
       }
@@ -220,12 +193,12 @@ export default {
       if (type) {
         //  回收站中删除
         batchDeleteRecoveryFile({
-          recoveryFileIds: JSON.stringify(this.selectionFile)
+          recoveryFileIds: JSON.stringify(this.selectionFile),
         }).then((res) => {
           if (res.success) {
             this.$message({
-              message: "删除成功",
-              type: 'success'
+              message: '删除成功',
+              type: 'success',
             })
             this.$emit('getTableDataByType')
             this.$store.dispatch('showStorage')
@@ -236,12 +209,12 @@ export default {
       } else {
         //  非回收站删除
         batchDeleteFile({
-          files: JSON.stringify(this.selectionFile)
+          files: JSON.stringify(this.selectionFile),
         }).then((res) => {
           if (res.success) {
             this.$message({
-              message: "删除成功",
-              type: 'success'
+              message: '删除成功',
+              type: 'success',
             })
             this.$emit('getTableDataByType')
             this.$store.dispatch('showStorage')
@@ -312,78 +285,54 @@ export default {
      */
     formatTooltip(val) {
       return `${val}px`
-    }
-  }
+    },
+  },
 }
 </script>
 
 <style lang="stylus" scoped>
-@import '~@/assets/styles/varibles.styl';
-
-.operation-menu-wrapper.file-type-6 {
-  margin: 8px 0;
-  justify-content: flex-end;
-}
-.operation-menu-wrapper {
-  padding: 8px 0;
-  display: flex;
-   float :right;
-  justify-content: space-between;
-  align-items: center;
-  margin-left :20px;
-  .operate-group {
-    flex: 1;
-       float :right;
-      margin-right :20px;
-    .drop-btn {
-      border-radius: 4px 0 0 4px;
-      >>> .el-button {       
-        border-radius: 4px 0 0 4px;
-      }
-    }
-  }
-
-  .select-file-input {
-    margin-right: 8px;
-    width: 250px;
-
-    .el-icon-search {
-      cursor: pointer;
-      font-size: 16px;
-
-      &:hover {
-        color: $Primary;
-      }
-    }
-  }
-
-  .batch-opera-btn {
-    margin-right: 8px;
-  }
-
-  .batch-icon, .setting-icon {
-    font-size: 20px;
-    cursor: pointer;
-    
-
-    &:hover {
-      color: $Primary;
-    }
-  }
-
-  .batch-icon.active {
-    color: $Primary;
-  }
-}
-
-.split-line {
-  margin: 8px 0;
-}
-
-.change-file-model, .change-grid-size {
-  .title {
-    margin: 8px 0;
-    font-size: 14px;
-  }
-}
+@import '~@/assets/styles/varibles.styl'
+// .operation-menu-wrapper.file-type-6
+.operation-menu-wrapper
+  border: 1px blue solid
+  margin: 8px 0
+  justify-content: flex-end
+.operation-menu-wrapper
+  padding: 8px 0
+  display: flex
+  float: right
+  justify-content: space-between
+  align-items: center
+  margin-left: 20px
+  .operate-group
+    flex: 1
+    float: right
+    margin-right: 20px
+    .drop-btn
+      border-radius: 4px 0 0 4px
+      >>> .el-button
+        border-radius: 4px 0 0 4px
+  .select-file-input
+    margin-right: 8px
+    width: 250px
+    .el-icon-search
+      cursor: pointer
+      font-size: 16px
+      &:hover
+        color: $Primary
+  .batch-opera-btn
+    margin-right: 8px
+  .batch-icon, .setting-icon
+    font-size: 20px
+    cursor: pointer
+    &:hover
+      color: $Primary
+  .batch-icon.active
+    color: $Primary
+.split-line
+  margin: 8px 0
+.change-file-model, .change-grid-size
+  .title
+    margin: 8px 0
+    font-size: 14px
 </style>

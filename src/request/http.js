@@ -1,7 +1,7 @@
 import axios from 'axios'
 import globalFunction from '@/utils/globalFunction.js'
 import router from '@/router/router'
-import { MessageBox } from 'element-ui';
+import { MessageBox, Notification, Message } from 'element-ui'
 
 // 登录提醒
 const loginTip = function() {
@@ -10,10 +10,10 @@ const loginTip = function() {
     callback: () => {
       router.push({
         path: '/login',
-        query: { Rurl: router.currentRoute.fullPath }  //  将当前页面的url传递给login页面进行操作
+        query: { Rurl: router.currentRoute.fullPath }, //  将当前页面的url传递给login页面进行操作
       })
-    }
-  });
+    },
+  })
 }
 
 // 请求超时时间
@@ -23,7 +23,8 @@ axios.defaults.timeout = 10000 * 5
 axios.defaults.baseURL = '/api'
 
 // POST 请求头
-axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
+axios.defaults.headers.post['Content-Type'] =
+  'application/x-www-form-urlencoded'
 
 // 请求携带cookie
 axios.defaults.withCredentials = true
@@ -31,35 +32,48 @@ axios.defaults.withCredentials = true
 // 请求拦截器
 axios.interceptors.request.use(
   (config) => {
-    config.headers['token'] = globalFunction.getCookies('token')
+    let token =  globalFunction.getCookies('token')
+    config.headers['Authorization'] = token
+    config.headers.lang = 'Chinese'
     return config
   },
   (error) => {
-    console.log(error)
     return Promise.reject(error)
   }
 )
 
 // 响应拦截器
 axios.interceptors.response.use(
-  (response) => {
-    if (response.status === 200) {
-      return Promise.resolve(response)
-    }
-  },
-  // 服务器状态码不是200的情况
-  (error) => {
-    if (error.response.status) {
-      console.log(error.response)
-      switch(error.response.status) {
-        case 401:
-          loginTip()
-          break
-        default:
-          return Promise.reject(error.response)
-      }
+  (res) => {
+    if (res.data.code === 0) {
+      return res
+    } else {
+      Message({
+        message: res.data.description,
+        type: 'error',
+      })
+      return Promise.reject(new Error(res.data.description))
     }
   }
+
+  // (response) => {
+  //   if (response.status === 200) {
+  //     return Promise.resolve(response)
+  //   }
+  // },
+  // // 服务器状态码不是200的情况
+  // (error) => {
+  //   if (error.response.status) {
+  //     console.log(error.response)
+  //     switch (error.response.status) {
+  //       case 401:
+  //         loginTip()
+  //         break
+  //       default:
+  //         return Promise.reject(error.response)
+  //     }
+  //   }
+  // }
 )
 
 /**
@@ -72,7 +86,7 @@ export function get(url, params) {
   return new Promise((resolve, reject) => {
     axios
       .get(url, {
-        params: params
+        params: params,
       })
       .then((res) => {
         resolve(res.data)

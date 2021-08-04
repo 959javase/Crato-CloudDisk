@@ -56,6 +56,9 @@ import {
   Drawer,
   Collapse,
   CollapseItem,
+  Descriptions,
+  DescriptionsItem,
+  Tag,
 } from "element-ui";
 
 const element = {
@@ -113,6 +116,9 @@ const element = {
     Vue.use(Drawer);
     Vue.use(Collapse);
     Vue.use(CollapseItem);
+    Vue.use(Descriptions);
+    Vue.use(DescriptionsItem);
+    Vue.use(Tag);
     Vue.prototype.$loading = Loading.service;
     Vue.prototype.$msgbox = MessageBox;
     Vue.prototype.$alert = MessageBox.alert;
