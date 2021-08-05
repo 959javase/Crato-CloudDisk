@@ -34,25 +34,8 @@ export default {
   actions: {
     // 账号密码登录
     Login({ commit }, userInfo) {
-      return new Promise((resolve, reject) => {
-        login({
-          name: userInfo.name.trim(),
-          password: userInfo.password,
-        })
-          .then((res) => {
-            globalFunction.setCookies('token', res.data.token)
-            commit('changeIsLogin', true)
-            store.dispatch('getUserInfo', res.data.userId)
-            resolve()
-            // setToken(data.access_token)
-            // commit('SET_TOKEN', data.access_token)
-            // setExpiresIn(data.expires_in)
-            // commit('SET_EXPIRES_IN', data.expires_in)
-          })
-          .catch((error) => {
-            reject(error)
-          })
-      })
+      commit('changeIsLogin', true)
+      store.dispatch('getUserInfo', userInfo.userId)
     },
     // 退出登录
     loginOut(context) {

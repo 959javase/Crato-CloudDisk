@@ -23,3 +23,5 @@ import { get, post } from './http'
 export const checkServiceStatus = (p) => get('/crato/checkServiceStatus', p)
 // 开通服务
 export const openCrato = (p) => post('/crato/openCrato', p)
+// 添加文件
+export const addFile = (p) => post('/crato/addFile', p)

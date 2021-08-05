@@ -78,7 +78,7 @@ import DragVerify from '@/components/common/DragVerify.vue' //  引入滑动解�
 import Header from '@/components/Header.vue'
 import { login, mobileLogin, sendSms } from '@/request/user.js'
 import GetPhoneCode from '@/components/getPhoneCode'
-
+import globalFunction from '@/utils/globalFunction.js'
 export default {
   name: 'Login',
   components: { DragVerify, Header, GetPhoneCode },
@@ -176,17 +176,23 @@ export default {
       this.$refs[formName].validate((valid) => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('Login', this.loginForm).then((res) => {
-            console.log(res);
-            this.loading = false
-            this.$refs[formName].resetFields()
-            this.$notify({
-              title: '成功',
-              message: '登陆成功',
-              type: 'success',
+          login(this.loginForm)
+            .then((res) => {
+              globalFunction.setCookies('token', res.data.token)
+              this.$store.dispatch('Login', res.data)
+              this.$refs[formName].resetFields()
+              this.$notify({
+                title: '成功',
+                message: '登陆成功',
+                type: 'success',
+              })
+              this.$router.replace({ path: '/' })
+              this.loading = false
             })
-            this.$router.replace({ path: '/' })
-          })
+            .catch((error) => {
+              this.loading = false
+            })
+          // })
           // 表单各项校验通过
           // login(this.loginForm).then((res) => {
           //   if (res.code === 0) {

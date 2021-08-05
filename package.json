@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@decooio/sdk": "^1.0.4",
     "canvas-nest.js": "^2.0.4",
     "core-js": "^2.6.5",
     "crypto-js": "^4.0.0",

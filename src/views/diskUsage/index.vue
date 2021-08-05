@@ -115,6 +115,7 @@ export default {
   height: valc(100vh - 250px)
   .chart-wrap_header
     display: flex
+    height: 100%
     .chart
       flex: 1
   .chart-wrap_footer

@@ -30,7 +30,11 @@ export default new Router({
       name: 'serviceOpen',
       component: () =>
         import(/* webpackChunkName: "register" */ '@/views/serviceOpen'),
-      meta: { title: 'serviceOpen' },
+      meta: {
+        requireAuth: true,
+        title: 'serviceOpen',
+        breadCrumbName: 'serviceOpen',
+      },
     },
     // {
     //   path: '/login',
