@@ -2,12 +2,12 @@
   <div class="file-container">
     <div class="file-header">
       <el-upload class="upload-file" ref="upload" action="https://api-hk.decoo.io/pinning/pinFile"
-        :headers="headers" :before-upload="beforeUpload">
+        :headers="headers" :data="datas" :before-upload="beforeUpload"
+        :on-success="fileUploadSuccess" :on-change="fileAdded" :auto-upload="false">
         <el-button slot="trigger" type="primary">文件上传</el-button>
         <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
       </el-upload>
-      <!-- <el-button type="primary" size="default" @click="fileUpload">文件上传</el-button>
-      <el-button type="primary" size="default" @click="floderUpload">文件夹上传</el-button> -->
+      <!-- <el-button type="primary" size="default" @click="floderUpload">文件夹上传</el-button> -->
     </div>
     <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch"
       label-width="68px">
@@ -53,15 +53,75 @@
     <!-- <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum"
       :limit.sync="queryParams.pageSize" /> -->
 
+    <el-dialog :title="userServiceType == 0 ? '按次收费上传文件' : '上传文件'" :visible.sync="openUploadShow"
+      center :close-on-click-modal="false">
+      <el-form>
+        <!-- 按次付费上传文件 -->
+        <template v-if="userServiceType == 0">
+          <el-form-item label="当前文件大小" :label-width="formLabelWidth">
+            <el-input v-model="fileSize" autocomplete="off" :style="{width: '30%'}" disabled>
+              <template slot="append">G</template>
+            </el-input>
+          </el-form-item>
+          <el-form-item label="存储期限" :label-width="formLabelWidth">
+            <el-select v-model="storageDays" @change="storageDaysChange" placeholder="请选择服务期限">
+              <el-option label="3个月" :value="90"></el-option>
+              <el-option label="6个月" :value="180"></el-option>
+              <el-option label="12个月" :value="365"></el-option>
+              <el-option label="36个月" :value="1095"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="费用合计" :label-width="formLabelWidth">
+            <el-input :style="{border:'none',width: '30%'}" disabled v-model="cost"
+              autocomplete="off">
+              <template slot="append">元</template>
+            </el-input>
+          </el-form-item>
+
+        </template>
+      </el-form>
+      <!-- 按存储容量上传文件 -->
+      <el-form>
+        <template v-if="userServiceType == 1">
+          <el-form-item label="剩余容量大小" :label-width="formLabelWidth">
+            <el-input v-model="surplusStroage" autocomplete="off" :style="{width: '40%'}" disabled>
+              <template slot="append">G</template>
+            </el-input>
+          </el-form-item>
+          <el-form-item label="当前文件大小" :label-width="formLabelWidth">
+            <el-input v-model="fileSize" autocomplete="off" :style="{width: '40%'}" disabled>
+              <template slot="append">G</template>
+            </el-input>
+          </el-form-item>
+        </template>
+      </el-form>
+      <div v-if="userServiceType == 0" slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="fileUpload">付费上传</el-button>
+      </div>
+      <div v-if="userServiceType == 1" slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="fileUpload">上传文件</el-button>
+      </div>
+    </el-dialog>
+
   </div>
 </template>
 
 <script>
 import { mapState } from 'vuex'
+import axios from 'axios'
+import getFileCid from '@decooio/sdk/src/getFileHash'
+import crypto from 'public-encrypt/index'
+import { RSAkey } from '@/common/RASkey'
+import { Buffer } from 'safe-buffer/index'
+import globalFunction from '@/utils/globalFunction.js'
+import { addFile } from '@/request/crato.js'
+
 export default {
   name: 'Article',
   data() {
     return {
+      formLabelWidth: '120px',
+      openUploadShow: false,
       // 遮罩层
       loading: false,
       // 选中数组
@@ -85,10 +145,6 @@ export default {
           expiredTime: '2022-08-05',
         },
       ],
-      // 弹出层标题
-      title: '',
-      // 是否显示弹出层
-      open: false,
       // 查询参数
       queryParams: {
         pageNum: 1,
@@ -98,28 +154,92 @@ export default {
         belong: null,
         expiredTime: null,
       },
-      // 表单参数
-      form: {},
+      // 文件上传
       headers: {},
+      datas: {},
       // 表单校验
       rules: {},
       // 用户类型 0 按次付费；1 按存储容量付费
       userServiceType: null,
       userInfo: {},
+      decooToken: '',
+      useraccesstoken: '',
+      // 按次付费上传文件大小
+      oneFileSize: '',
+      // 按存储容量上传文件大小
+      fileSize: '',
+      // 按次付费显示内容
+      storageDays: 90,
+      // 费用合计
+      cost: 0,
+      // 用户剩余容量
+      // surplusStroage: 0,
     }
   },
   computed: {
     ...mapState(['user']),
+    // 用户剩余容量
+    surplusStroage: function () {
+      return globalFunction.downFixed(
+        this.userInfo.fixedSpace - this.userInfo.used,
+        2
+      )
+    },
   },
   created() {
-    this.headers.UserAccessToken = this.user.token
     this.userInfo = JSON.parse(this.user.userInfoObj)
     this.userServiceType = this.userInfo.serviceType
-    console.log(this.userInfo)
+    if (this.userServiceType == 1) {
+      // console.log(Date.parse(new Date(this.userInfo.expiredTime)))
+      // this.storageDays =
+      let nowDate = new Date()
+      // TODO: 这个有效期还需要再确认下
+      this.storageDays = globalFunction.getNumberOfDays(
+        nowDate,
+        this.userInfo.expiredTime
+      )
+    }
   },
   methods: {
+    getDecooToken() {
+      axios({
+        method: 'GET',
+        url: 'https://api.decoo.io/oauth/accessToken',
+      })
+        .then((res) => {
+          const { data } = res
+          // this.decooToken = data.data
+          this.headers.useraccesstoken = data.Data
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+    },
+    fileAdded(file) {
+      // 只让在文件选择完成后触发
+      if (file.status !== 'ready') return
+      // 计算文件大小单位是G，最小为1
+      const GB = Math.pow(1024, 3)
+      // 小于1MB的文件按照0.001GB
+      const MB = Math.pow(1024, 2)
+      if (file.size > MB) {
+        this.fileSize = globalFunction.downFixed(file.size / GB, 3)
+      } else {
+        this.fileSize = 0.001
+      }
+      // 按次上传：计算金额
+      if (this.userServiceType == 0) {
+        if (this.fileSize < 1) {
+          this.cost = 1 * 0.01 * this.storageDays
+        } else {
+          this.cost = this.fileSize * 0.01 * this.storageDays
+        }
+      }
+      this.openUploadShow = true
+      console.log(file)
+    },
     fileUpload() {
-      console.log('文件上传')
+      this.$refs.upload.submit()
     },
     floderUpload() {
       console.log('文件夹上传')
@@ -133,31 +253,20 @@ export default {
     handleDelete() {
       console.log('删除这个文件')
     },
-    // 上传文件
-    submitUpload() {
-      this.$confirm('确认将此文件上传?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'info',
-      })
-        .then(() => {
-          this.$refs.upload.submit()
-          this.$message({
-            type: 'success',
-            message: '上传成功!',
-          })
-        })
-        .catch(() => {
-          this.$message({
-            type: 'info',
-            message: '已取消上传',
-          })
-          return false
-        })
-    },
+    // 上传文件前：需要获取文件cid、secret
+    // TODOS: 需要在这里算钱
     async beforeUpload(file) {
-      console.log(file)
-      console.log('上传文件之前')
+      // 获取文件cid
+      const cid = await getFileCid(file)
+      this.datas.cid = cid
+      // 获取secret
+      this.datas.secret = crypto
+        .privateEncrypt(RSAkey, Buffer.from(cid))
+        .toString('base64')
+      this.datas.decooOptions = {
+        name: file.name,
+      }
+      await this.getDecooToken()
       return new Promise((resolve, reject) => {
         this.$confirm('确认将此文件上传?', '提示', {
           confirmButtonText: '确定',
@@ -179,6 +288,52 @@ export default {
             return reject(false)
           })
       })
+    },
+    getFileUpload() {},
+    // 文件上传中
+
+    // 文件上传完成
+    fileUploadSuccess(res, file) {
+      if (file.status == 'success') {
+        this.openUploadShow = false
+        let fileSize = 0
+        // 计算文件大小单位是G，最小为1
+        const GB = Math.pow(1024, 3)
+        // 如果是按存储容量文件大小按照实际
+        if (this.userServiceType == 1) {
+          fileSize = globalFunction.upFixed(res.PinSize / GB, 3)
+        } else if (this.userServiceType == 0) {
+          // 按次上传不满1G 按照1G收费
+          if (res.PinSize > GB) {
+            fileSize = globalFunction.upFixed(res.PinSize / GB, 3)
+          } else {
+            fileSize = 1
+          }
+        }
+        addFile({
+          // 账号名称 name
+          name: this.userInfo.name,
+          // fileName
+          fileName: file.name,
+          // cid
+          cid: this.datas.cid,
+          // fileSize
+          fileSize: fileSize,
+          storageDays: this.storageDays,
+          cost: this.cost,
+        }).then((res) => {
+          console.log('文件上传成功')
+        })
+      }
+    },
+    // 计算按次收费总金额
+    storageDaysChange() {
+      if (this.fileSize < 1) {
+        this.cost = 1 * 0.05 * this.storageDays
+      } else {
+        this.cost = this.fileSize * 0.05 * this.storageDays
+      }
+      console.log(this.cost)
     },
   },
 }

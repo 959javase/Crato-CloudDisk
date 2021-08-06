@@ -19,11 +19,5 @@ import { get, post } from './http'
  * export const example = p => post('/test/example', p, true);
  */
 
-// 查询用户服务类型
-export const checkServiceStatus = (p) => get('/crato/checkServiceStatus', p)
-// 开通服务
-export const openCrato = (p) => post('/crato/openCrato', p)
-// 添加文件
-export const addFile = (p) => post('/crato/addFile', p)
-// 添加文件
-export const listFile = (p) => get('/crato/listFile', p)
+// 大盘折线图
+export const getDashboardData = (p) => get('/dashboard/queryDashboardData', p)

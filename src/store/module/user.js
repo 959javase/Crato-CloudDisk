@@ -51,16 +51,28 @@ export default {
       }).then((res) => {
         let { data } = res
         let { bizCrato } = data
-        let userInfo = {
-          name: data.name,
-          userId: data.id,
-          type: data.type,
-          balance: data.balance,
-          belong: data.belong,
-          fixedSpace: bizCrato.fixedSpace,
-          used: bizCrato.used,
-          product: bizCrato.product,
-          serviceType: bizCrato.serviceType,
+        let userInfo = {}
+        if (bizCrato) {
+          userInfo = {
+            name: data.name,
+            userId: data.id,
+            type: data.type,
+            balance: data.balance,
+            belong: data.belong,
+            fixedSpace: bizCrato.fixedSpace,
+            used: bizCrato.used,
+            product: bizCrato.product,
+            serviceType: bizCrato.serviceType,
+            expiredTime: bizCrato.expiredTime,
+          }
+        } else {
+          userInfo = {
+            name: data.name,
+            userId: data.id,
+            type: data.type,
+            balance: data.balance,
+            belong: data.belong,
+          }
         }
         commit('changeUserInfoObj', userInfo)
       })

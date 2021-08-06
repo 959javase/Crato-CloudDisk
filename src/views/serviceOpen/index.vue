@@ -45,7 +45,6 @@
             </el-input>
           </el-form-item>
         </template>
-
       </el-form>
       <el-descriptions direction="vertical" :column="2" border>
         <template slot="title">
@@ -91,10 +90,13 @@ export default {
       },
       isAgree: false,
       loading: false,
+      userId: null,
     }
   },
   created() {
     this.serviceFrom.name = JSON.parse(this.user.userInfoObj).name
+    this.userId = JSON.parse(this.user.userInfoObj).userId
+    this.$store.dispatch('getUserInfo', this.userId)
   },
   computed: {
     ...mapState(['user']),
@@ -114,11 +116,15 @@ export default {
 
   methods: {
     openService() {
-      this.loading = true
       if (this.isAgree) {
-        console.log('开通服务')
+        this.loading = true
         openCrato(this.serviceFrom).then((res) => {
-          console.log(res)
+          console.log(res);
+          this.$store.dispatch('getUserInfo', this.userId)
+          this.loading = false
+        })
+        .catch((err)=> {
+          this.loading = false
         })
       } else {
         this.$message({
@@ -126,7 +132,6 @@ export default {
           type: 'warning',
         })
       }
-      this.loading = false
     },
   },
 }

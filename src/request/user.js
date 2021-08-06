@@ -29,6 +29,8 @@ export const queryAccount = (p) => get('/accounts/queryAccount', p)
 export const loginOut = (p) => get('/accounts/signOut', p)
 // 发送验证码
 export const sendSms = (p) => get('/accounts/sendSms', p)
+// 校验验证码
+export const checkSms = (p) => get('/accounts/checkSms', p)
 // 获取登录状态及用户信息
 // export const checkUserLoginInfo = (p) => get('/user/check', p)
 // 用户注册

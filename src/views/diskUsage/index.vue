@@ -25,6 +25,8 @@ import {
   LegendComponent,
 } from 'echarts/components'
 import VChart from 'vue-echarts'
+import { getDashboardData } from '@/request/dashboard.js'
+import { mapState } from 'vuex'
 
 use([
   CanvasRenderer,
@@ -41,6 +43,7 @@ export default {
   },
   data() {
     return {
+      userInfo: {},
       option: {
         title: {
           text: '折线图1',
@@ -104,6 +107,18 @@ export default {
         ],
       },
     }
+  },
+  computed: {
+    ...mapState(['user']),
+  },
+  created() {
+    this.userInfo = JSON.parse(this.user.userInfoObj)
+    console.log(this.userInfo)
+    getDashboardData({ username: this.userInfo.name, granularity: 'day' }).then(
+      (res) => {
+        console.log(res)
+      }
+    )
   },
 }
 </script>

@@ -30,7 +30,7 @@
           <el-form-item prop="" class="phone_code">
             <el-input prefix-icon="el-icon-lock" v-model="registerForm.phonecode" placeholder="验证码"
               maxlength="6" :style="{width: '70%'}"></el-input>
-            <GetPhoneCode />
+            <GetPhoneCode :mobile="registerForm.mobile" @getCode="getUuid" />
           </el-form-item>
           <el-form-item style="user-select: none">
             <drag-verify ref="dragVerifyRef" text="请按住滑块拖动解锁" successText="验证通过"
@@ -52,7 +52,7 @@
 <script>
 import DragVerify from '@/components/common/DragVerify.vue' //  引入滑动解锁组件
 import Header from '@/components/Header.vue'
-import { register, checkname, checkmobile, sendSms } from '@/request/user.js'
+import { register, checkname, checkmobile, checkSms } from '@/request/user.js'
 import GetPhoneCode from '@/components/getPhoneCode'
 
 export default {
@@ -60,6 +60,7 @@ export default {
   components: { DragVerify, Header, GetPhoneCode },
   data() {
     return {
+      uuid: '',
       loading: false,
       checkNameTag: false,
       checkMobileTag: false,
@@ -216,9 +217,7 @@ export default {
             this.$error(res.description)
           }
         })
-        .catch((err) => {
-          console.log(err)
-        })
+        .catch((err) => {})
     },
     /**
      * 注册按钮点击事件 表单验证&用户注册
@@ -230,22 +229,33 @@ export default {
           if (valid) {
             this.loading = true
             // 表单各项校验通过
-            register(this.registerForm).then((res) => {
-              if (res.code === 0) {
-                this.$notify({
-                  title: '成功',
-                  message: '注册成功！已跳转到登录页面',
-                  type: 'success',
+            checkSms({
+              phone: this.registerForm.mobile,
+              code: this.registerForm.phonecode,
+              uuid: this.uuid,
+            }).then((res) => {
+              if (res.code == 200) {
+                register(this.registerForm).then((res) => {
+                  if (res.code === 0) {
+                    this.$notify({
+                      title: '成功',
+                      message: '注册成功！已跳转到登录页面',
+                      type: 'success',
+                    })
+                    this.$refs[formName].resetFields()
+                    this.$router.replace({ path: '/login' })
+                  } else {
+                    this.submitDisabled = true
+                    this.isPassing = false
+                    this.$refs.dragVerifyRef.reset()
+                    this.$message.error(res.description)
+                  }
+                  this.loading = false
                 })
-                this.$refs[formName].resetFields()
-                this.$router.replace({ path: '/login' })
               } else {
-                this.submitDisabled = true
-                this.isPassing = false
-                this.$refs.dragVerifyRef.reset()
-                this.$message.error(res.description)
+                this.loading = false
+                this.$message.error(res.msg)
               }
-              this.loading = false
             })
           } else {
             this.$message.error('请正确填写用户注册信息！')
@@ -255,6 +265,9 @@ export default {
       } else {
         this.$message.error('用户名或手机号已注册')
       }
+    },
+    getUuid(e) {
+      this.uuid = e
     },
   },
 }

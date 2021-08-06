@@ -11,9 +11,10 @@
 </template>
 
 <script>
+import { sendSms } from '@/request/user.js'
 export default {
   props: {
-    phone: {
+    mobile: {
       type: String,
       default: '',
     },
@@ -28,7 +29,13 @@ export default {
   },
   methods: {
     getPhoneCode() {
-      console.log('点击了获取验证码')
+      sendSms({
+        mobile: this.mobile,
+      })
+        .then((res) => {
+          this.$emit('getCode',res.uuid)
+        })
+        .catch((err) => {})
       this.BtnSms = true
       this.countDownTimer()
     },

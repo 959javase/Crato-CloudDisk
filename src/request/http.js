@@ -32,10 +32,22 @@ axios.defaults.withCredentials = true
 // 请求拦截器
 axios.interceptors.request.use(
   (config) => {
-    let token =  globalFunction.getCookies('token')
-    config.headers['Authorization'] = token
-    config.headers.lang = 'Chinese'
-    return config
+    if (
+      config.url == 'https://api.decoo.io/oauth/accessToken' ||
+      config.url == 'https://api-hk.decoo.io/pinning/pinFile'
+    ) {
+      let token =
+        'Bearer ' +
+        'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJrZXkiOnsiYXBpX2tleSI6IjEwNzJtTVIxYzRpUUZaN1hQdkl6RmI2UTB3UzhXVVRRNDhQbDE2MjgxMzk0NDg1NzEiLCJ1c2VyX2lkIjoxMDcyfX0.Og-40utIPmBjz-qsEJd71KzjJWgTzDHodq8Ee3f5hY4'
+      config.headers['Authorization'] = token
+      config.headers['Content-Type'] = 'application/json'
+      return config
+    } else {
+      let token = globalFunction.getCookies('token')
+      config.headers['Authorization'] = token
+      config.headers.lang = 'Chinese'
+      return config
+    }
   },
   (error) => {
     return Promise.reject(error)
@@ -45,7 +57,7 @@ axios.interceptors.request.use(
 // 响应拦截器
 axios.interceptors.response.use(
   (res) => {
-    if (res.data.code === 0) {
+    if (res.data.code === 0 || res.data.Code === 200 || res.status === 200) {
       return res
     } else {
       Message({
@@ -54,26 +66,30 @@ axios.interceptors.response.use(
       })
       return Promise.reject(new Error(res.data.description))
     }
-  }
+  },
 
   // (response) => {
   //   if (response.status === 200) {
   //     return Promise.resolve(response)
   //   }
   // },
-  // // 服务器状态码不是200的情况
-  // (error) => {
-  //   if (error.response.status) {
-  //     console.log(error.response)
-  //     switch (error.response.status) {
-  //       case 401:
-  //         loginTip()
-  //         break
-  //       default:
-  //         return Promise.reject(error.response)
-  //     }
-  //   }
-  // }
+  // 服务器状态码不是200的情况
+  (error) => {
+    if (error.response.status) {
+      Message({
+        message: error.response.statusText,
+        type: 'error',
+      })
+      return Promise.reject(new Error(error.response.statusText))
+      // switch (error.response.status) {
+      //   case 401:
+      //     loginTip()
+      //     break
+      //   default:
+      //     return Promise.reject(error.response)
+      // }
+    }
+  }
 )
 
 /**
