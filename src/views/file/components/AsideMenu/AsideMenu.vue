@@ -5,7 +5,7 @@
       text-color="#000">
       <el-menu-item index="diskUsage" :route="{ name: 'diskUsage' }">
         <!-- <i class="el-icon-picture"></i> -->
-        <span slot="title">大盘</span>
+        <span slot="title">大盘分析</span>
       </el-menu-item>
       <el-menu-item index="fileList" :route="{ name: 'fileList'}">
         <!-- <i class="el-icon-picture"></i> -->
@@ -15,10 +15,11 @@
         <!-- <i class="el-icon-picture"></i> -->
         <span slot="title">账户管理</span>
       </el-menu-item>
-      <el-menu-item index="cost" :route="{ name: 'cost' }">
-        <!-- <i class="el-icon-picture"></i> -->
+       <!-- <i class="el-icon-picture"></i> -->
+      <!-- <el-menu-item index="cost" :route="{ name: 'cost' }">
+       
         <span slot="title">费用管理</span>
-      </el-menu-item>
+      </el-menu-item> -->
       <!-- <el-menu-item index="0" :route="{ name: 'File', query: { fileType: 0, filePath: '/' } }"> -->
       <!-- 图标均来自 Element UI 官方图标库 https://element.eleme.cn/#/zh-CN/component/icon -->
       <!-- <i class="el-icon-menu"></i>
@@ -126,7 +127,7 @@ export default {
 @import '~@/assets/styles/varibles.styl'
 @import '~@/assets/styles/mixins.styl'
 .side-menu-wrapper
-  border: 1px red solid
+  // border: 1px red solid
   display :flex
   flex-direction :column
   overflow :hidden
@@ -137,9 +138,10 @@ export default {
   margin-top: 15px
   // margin-left: 30px
   .side-menu
-    border: 1px green solid
+    // border: 1px green solid
     // 高度设置为屏幕高度减去顶部导航栏的高度
-    height: calc(100vh - 137px)
+    // height: calc(100vh - 137px)
+    height: 100%
     width :100%
     overflow: auto
     // 调整滚动条样式

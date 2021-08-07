@@ -1,6 +1,6 @@
 <template>
   <div class="header-wrapper">
-    <img class="logo" :src="logoUrl" @click="$router.push({ name: 'File' })" />
+    <img class="logo" :src="logoUrl" @click="$router.push({ path: '/' })" />
     <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" router>
       <!-- <div class="el-menu-item exit" @click="exitButton()" v-show="isLogin">    退出</div> -->
       <div class="el-menu-item username" v-show="isLogin" @click="drawer = !drawer">
@@ -8,20 +8,72 @@
       </div>
       <div class="el-menu-item username" v-show="isLogin">
         <el-avatar src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"
-          size="small"></el-avatar> <span style="color:black;font-weight:400">{{ username }} </span>
-        <i class="el-icon-s-opportunity" style="font-wight:400"></i>
+          size="small"></el-avatar> <span style="color:black;font-weight:400">{{ userInfo.name }}
+        </span>
+        <!-- <i class="el-icon-s-opportunity" style="font-wight:400"></i> -->
       </div>
       <el-menu-item class="login" index="Login" :route="{ name: 'Login' }" v-show="!isLogin">登陆
       </el-menu-item>
       <!-- 生产环境 -->
-      <el-menu-item class="register" v-if="isProductEnv" v-show="!isLogin">
+      <!-- <el-menu-item class="register" v-if="isProductEnv" v-show="!isLogin">
         <a href="https://www.crato.io/register" target="_blank">注册</a>
-      </el-menu-item>
+      </el-menu-item> -->
       <!-- 开发环境 -->
-      <el-menu-item class="register" v-else v-show="!isLogin" index="Register"
+      <el-menu-item class="register" v-show="!isLogin" index="Register"
         :route="{ name: 'Register' }">注册</el-menu-item>
     </el-menu>
-    <el-drawer title="" :visible.sync="drawer" :direction="direction" :modal="false" show-close
+    <el-drawer title="用户信息" :visible.sync="drawer" :direction="direction" :modal="false"
+      :destroy-on-close="true" :wrapperClosable="true" show-close size=260>
+      <div class="drawer-wrap">
+        <div class="drawer-wrap_header">
+          <el-avatar src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"
+            size="large"></el-avatar>
+          <div class="name" style="">{{userInfo.name}}</div>
+        </div>
+        <div class="drawer-wrap_content">
+          <el-descriptions :column="1">
+            <!-- <el-descriptions-item label="用户名">{{userInfo.name}}</el-descriptions-item> -->
+            <el-descriptions-item label="手机号">{{userInfo.mobile}}</el-descriptions-item>
+            <el-descriptions-item label="账户余额">{{userInfo.balance}}元</el-descriptions-item>
+            <el-descriptions-item label="账号类型">{{userInfo.serviceType == 0 ? '按次付费' : '存储容量预付费'}}
+            </el-descriptions-item>
+            <el-descriptions-item v-if="userInfo.serviceType == 1" label="已用/总容量">
+              {{userInfo.used}}/{{userInfo.fixedSpace}}G
+            </el-descriptions-item>
+          </el-descriptions>
+          <el-progress :percentage="storagePercentage" :color="customColors"></el-progress>
+        </div>
+        <div class="drawer-wrap_about">
+          <el-collapse v-model="activeName" accordion>
+            <el-collapse-item title="功能" name="1">
+              <div>安全的加密存储</div>
+              <div>防盗链</div>
+              <div>防篡改加密合同</div>
+            </el-collapse-item>
+            <el-collapse-item title="服务" name="2">
+              <div>API接入</div>
+            </el-collapse-item>
+            <el-collapse-item title="关于公司" name="3">
+              <div>NashCloud致力于区块链分布式存储技术研发的科技公司，以区块链技术为核心，为客户提供一站式分布式存储解决方案。</div>
+            </el-collapse-item>
+            <el-collapse-item title="反馈" name="4">
+              <div>
+                <el-input type="textarea" placeholder="请输入建议或反馈" v-model="textarea" maxlength="30"
+                  show-word-limit>
+                </el-input>
+                <el-button type="text">提交</el-button>
+              </div>
+            </el-collapse-item>
+          </el-collapse>
+        </div>
+        <div class="drawer-wrap_footer">
+          <el-button type="primary" size="default" @click="loginOut">退出登录</el-button>
+
+        </div>
+      </div>
+    </el-drawer>
+
+    <!-- <el-drawer title="" :visible.sync="drawer" :direction="direction"  show-close
       size=260>
       <div class="top-menu-scroll jspScrollable"
         style="overflow: hidden; padding: 0px; width: 256px;">
@@ -39,10 +91,10 @@
                   </div>
                 </div>
                 <div class="user-info">
-                  <div class="name" style="">{{username}}</div>
+                  <div class="name" style="">{{userInfo.name}}</div>
                   <div class="email">biulifan@gmail.com</div>
                 </div>
-                <!-- <div class="clear"></div> -->
+                <div class="clear"></div>
                 <el-progress :percentage="storagePercentage" :color="customColors"
                   style="margin-top:20px"></el-progress>
 
@@ -51,7 +103,6 @@
                   <span>{{ maxStorageValue | storageTrans(true) }}</span>
                   <el-button type="text" style="margin-left:20px">更多存储</el-button>
                 </div>
-
                 <el-collapse v-model="activeName" accordion>
                   <el-collapse-item title="功能" name="1">
                     <div>安全的加密存储</div>
@@ -86,12 +137,12 @@
         </div>
       </div>
 
-    </el-drawer>
+    </el-drawer> -->
   </div>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapState } from 'vuex'
 
 export default {
   name: 'Header',
@@ -105,18 +156,25 @@ export default {
       customColor: '#409eff',
       percentage: 0,
       customColors: [
-        { color: '#f56c6c', percentage: 20 },
-        { color: '#e6a23c', percentage: 40 },
-        { color: '#5cb87a', percentage: 60 },
-        { color: '#1989fa', percentage: 80 },
-        { color: '#6f7ad3', percentage: 100 },
+        { color: '#67C23A', percentage: 40 },
+        { color: '#E6A23C', percentage: 80 },
+        { color: '#F56C6C', percentage: 100 },
       ],
       activeName: '1',
       maxStorage: 0,
+      userInfo: {},
     }
   },
+  created() {
+    if (!this.isLogin) return
+    this.$nextTick(() => {
+      this.userInfo = JSON.parse(this.user.userInfoObj)
+    })
+    // console.log(this.userInfo)
+  },
   computed: {
-    ...mapGetters(['isLogin', 'username']),
+    ...mapGetters(['isLogin']),
+    ...mapState(['user']),
     // 当前激活菜单的 index
     activeIndex() {
       return this.$route.name || 'Home' //  获取当前路由名称
@@ -139,7 +197,7 @@ export default {
     // 存储百分比
     storagePercentage() {
       return Number(
-        ((this.storageValue / this.maxStorageValue) * 100)
+        ((this.userInfo.used / this.userInfo.fixedSpace) * 100)
           .toString()
           .split('.')[0]
       )
@@ -150,12 +208,15 @@ export default {
      * 退出登录
      * @description 清除 cookie 存放的 token 和 viewDomain 并跳转到登录页面
      */
-    exitButton() {
+    loginOut() {
       this.$message.success('exit success！')
       this.drawer = false
-      this.$store.dispatch('getUserInfo').then(() => {
-        this.removeCookies('viewDomain')
-        this.removeCookies('token')
+      // this.$store.dispatch('getUserInfo').then(() => {
+      //   this.removeCookies('viewDomain')
+      //   this.removeCookies('token')
+      //   this.$router.push({ path: '/login' })
+      // })
+      this.$store.dispatch('loginOut').then(() => {
         this.$router.push({ path: '/login' })
       })
     },
@@ -171,6 +232,23 @@ export default {
 
 <style lang="stylus" scoped>
 @import '~@/assets/styles/varibles.styl'
+// 侧边抽屉Drawer样式
+.drawer-wrap
+  width: 260px
+  padding: 20px
+  padding-top: 0
+  .drawer-wrap_header
+    display: flex
+    align-items: center
+    // justify-content: center
+    .name
+      margin-left: 10px
+  .drawer-wrap_content
+    margin-top: 20px
+  .drawer-wrap_about
+    margin-top: 30px
+  .drawer-wrap_footer
+    margin-top: 30px
 .header-wrapper
   width: 100%
   box-shadow: $tabBoxShadow

@@ -25,5 +25,5 @@ export const checkServiceStatus = (p) => get('/crato/checkServiceStatus', p)
 export const openCrato = (p) => post('/crato/openCrato', p)
 // 添加文件
 export const addFile = (p) => post('/crato/addFile', p)
-// 添加文件
+// 文件列表
 export const listFile = (p) => get('/crato/listFile', p)

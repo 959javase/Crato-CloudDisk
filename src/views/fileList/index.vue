@@ -15,16 +15,16 @@
         <el-input v-model="queryParams.fileName" placeholder="请输入文件名" clearable size="small" />
       </el-form-item>
       <el-form-item label="归属账号" prop="title">
-        <el-input v-model="queryParams.belong" placeholder="请输入归属账号" clearable size="small" />
+        <el-input v-model="queryParams.name" placeholder="请输入归属账号" clearable size="small" />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini">搜索
+        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索
         </el-button>
-        <el-button icon="el-icon-refresh" size="mini">重置</el-button>
+        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
 
-    <el-table v-loading="loading" :data="fileList">
+    <el-table v-loading="loading" :data="fileList" height="685">
       <el-table-column label="序号" align="center" width="50">
         <template slot-scope="scope">
           {{scope.$index + 1}}
@@ -32,7 +32,8 @@
       </el-table-column>
       <el-table-column label="文件名" align="center" prop="fileName" />
       <el-table-column label="大小" align="center" prop="fileSize" />
-      <el-table-column label="归属账号" align="center" prop="belong" />
+      <el-table-column label="CID" align="center" prop="cid" />
+      <el-table-column label="归属账号" align="center" prop="name" />
       <el-table-column label="成本" align="center" prop="cost" />
       <el-table-column label="创建日期" align="center" prop="dateTime" />
       <el-table-column label="到期日期" align="center" prop="expiredTime" />
@@ -44,14 +45,13 @@
           </el-button>
           <el-button size="mini" type="text" icon="el-icon-money" @click="handleRenew(scope.row)">续费
           </el-button>
-          <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)">
-            删除</el-button>
+          <!-- <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)">
+            删除</el-button> -->
         </template>
       </el-table-column>
     </el-table>
-
-    <!-- <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum"
-      :limit.sync="queryParams.pageSize" /> -->
+    <el-pagination v-show="fileList.length>0" :total="fileList.length"
+      :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" background />
 
     <el-dialog :title="userServiceType == 0 ? '按次收费上传文件' : '上传文件'" :visible.sync="openUploadShow"
       center :close-on-click-modal="false">
@@ -114,7 +114,7 @@ import crypto from 'public-encrypt/index'
 import { RSAkey } from '@/common/RASkey'
 import { Buffer } from 'safe-buffer/index'
 import globalFunction from '@/utils/globalFunction.js'
-import { addFile } from '@/request/crato.js'
+import { addFile, listFile } from '@/request/crato.js'
 
 export default {
   name: 'Article',
@@ -135,24 +135,15 @@ export default {
       // 总条数
       total: 0,
       // 文章管理表格数据
-      fileList: [
-        {
-          fileName: '测试文件',
-          fileSize: '10G',
-          belong: '17862807932',
-          cost: '20',
-          dateTime: '2021-08-05',
-          expiredTime: '2022-08-05',
-        },
-      ],
+      fileList: [],
       // 查询参数
       queryParams: {
         pageNum: 1,
         pageSize: 10,
-        username: null,
-        fileName: null,
-        belong: null,
-        expiredTime: null,
+        username: '',
+        fileName: '',
+        belong: '',
+        expiredTime: '',
       },
       // 文件上传
       headers: {},
@@ -174,6 +165,8 @@ export default {
       cost: 0,
       // 用户剩余容量
       // surplusStroage: 0,
+      // 下载src
+      downloadSrc: '',
     }
   },
   computed: {
@@ -189,6 +182,7 @@ export default {
   created() {
     this.userInfo = JSON.parse(this.user.userInfoObj)
     this.userServiceType = this.userInfo.serviceType
+    this.queryParams.username = this.userInfo.name
     if (this.userServiceType == 1) {
       // console.log(Date.parse(new Date(this.userInfo.expiredTime)))
       // this.storageDays =
@@ -199,8 +193,27 @@ export default {
         this.userInfo.expiredTime
       )
     }
+    this.getListFile()
   },
   methods: {
+    /** 搜索按钮操作 */
+    handleQuery() {
+      this.queryParams.pageNum = 1
+      this.getListFile()
+    },
+    /** 重置按钮操作 */
+    resetQuery() {
+      this.queryParams.fileName = ''
+      this.queryParams.name = ''
+      this.handleQuery()
+    },
+    getListFile() {
+      this.loading = true
+      listFile(this.queryParams).then((res) => {
+        this.fileList = res.data
+        this.loading = false
+      })
+    },
     getDecooToken() {
       axios({
         method: 'GET',
@@ -244,8 +257,24 @@ export default {
     floderUpload() {
       console.log('文件夹上传')
     },
-    handleUpload() {
-      console.log('下载这个文件')
+    handleUpload(e) {
+      let url = `https://ipfs-hk.decoo.io/ipfs/${e.cid}?filename=${e.fileName}`
+      // this.downloadSrc = url
+      // this.$nextTick(() => {
+      //   this.downloadFrame = this.$refs.downloadDia.contentWindow
+      // })
+      // window.location.href = url
+      // // 创建a标签
+      // const link = document.createElement('a')
+      // // download属性
+      // link.setAttribute('download', e.fileName)
+      // // href链接
+      // link.setAttribute('href', url)
+      // // 自执行点击事件
+      // link.click()
+      // document.body.removeChild(link)
+
+      window.open(url)
     },
     handleRenew() {
       console.log('续费这个文件')
@@ -276,7 +305,7 @@ export default {
           .then(() => {
             this.$message({
               type: 'success',
-              message: '上传成功!',
+              message: '付款成功!',
             })
             return resolve(true)
           })
@@ -296,6 +325,10 @@ export default {
     fileUploadSuccess(res, file) {
       if (file.status == 'success') {
         this.openUploadShow = false
+        this.$message({
+          type: 'success',
+          message: '文件上传成功!',
+        })
         let fileSize = 0
         // 计算文件大小单位是G，最小为1
         const GB = Math.pow(1024, 3)
@@ -322,7 +355,7 @@ export default {
           storageDays: this.storageDays,
           cost: this.cost,
         }).then((res) => {
-          console.log('文件上传成功')
+          console.log('完成')
         })
       }
     },

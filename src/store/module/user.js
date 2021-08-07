@@ -4,7 +4,7 @@ import store from '@/store'
 
 export default {
   state: {
-    isLogin: false, //  用户登录状态
+    isLogin: sessionStorage.getItem('isLogin') || false, //  用户登录状态
     token: globalFunction.getCookies('token') || '', // 用户token
     userInfoObj: sessionStorage.getItem('userInfoObj') || {}, // 用户信息
     // mk: '', //  用户信息
@@ -16,6 +16,7 @@ export default {
      * @param {boolean} data 登录状态
      */
     changeIsLogin(state, data) {
+      sessionStorage.setItem('isLogin', data)
       state.isLogin = data
     },
     /**
@@ -38,12 +39,17 @@ export default {
       store.dispatch('getUserInfo', userInfo.userId)
     },
     // 退出登录
-    loginOut(context) {
-      return loginOut({ username: store.state.userInfoObj.username }).then(
-        (res) => {
-          console.log(res)
-        }
-      )
+    loginOut({ commit }, context) {
+      // let name = JSON.parse(store.state.user.userInfoObj)
+      // return loginOut({ username: name.name }).then(
+      //   (res) => {
+      //     console.log(res)
+      //   }
+      // )
+      commit('changeIsLogin', false)
+      sessionStorage.removeItem('isLogin')
+      sessionStorage.removeItem('userInfoObj')
+      globalFunction.removeCookies('token')
     },
     getUserInfo({ commit }, userId) {
       return queryAccount({
@@ -55,6 +61,7 @@ export default {
         if (bizCrato) {
           userInfo = {
             name: data.name,
+            mobile: data.mobile,
             userId: data.id,
             type: data.type,
             balance: data.balance,

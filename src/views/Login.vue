@@ -62,8 +62,8 @@
             <el-button class="login-btn" type="primary" :disabled="loginBtnDisabled"
               @click="submitForm('loginForm')">登陆</el-button>
           </el-form-item>
-          <a href="#" @click="codeLogin" style="margin-right:30px;font-weight:700"><span
-              style="font-size:8pt">{{isCodeLogin ? '用户名密码登录' : '手机验证码登录'}}</span></a>
+          <!-- <a href="#" @click="codeLogin" style="margin-right:30px;font-weight:700"><span
+              style="font-size:8pt">{{isCodeLogin ? '用户名密码登录' : '手机验证码登录'}}</span></a> -->
           <a href="/Register"><span style="font-size:8pt">没有账号？立即注册</span></a>
         </el-form>
       </div>
@@ -186,7 +186,7 @@ export default {
                 message: '登陆成功',
                 type: 'success',
               })
-              this.$router.replace({ path: '/' })
+              this.$router.push({ path: '/' })
               this.loading = false
             })
             .catch((error) => {

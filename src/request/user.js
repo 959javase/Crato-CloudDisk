@@ -26,7 +26,7 @@ export const mobileLogin = (p) => post('/accounts/mobileLogin', p)
 // 查询用户信息
 export const queryAccount = (p) => get('/accounts/queryAccount', p)
 // 用户登出
-export const loginOut = (p) => get('/accounts/signOut', p)
+export const loginOut = (p) => post('/accounts/signOut', p)
 // 发送验证码
 export const sendSms = (p) => get('/accounts/sendSms', p)
 // 校验验证码

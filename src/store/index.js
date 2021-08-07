@@ -23,14 +23,14 @@ export default new Vuex.Store({
     // 用户ID
     userId: (state) => state.user.userInfoObj.userId,
     // 表格显示列
-    selectedColumnList: (state) =>
-      state.fileList.selectedColumnList === undefined
-        ? config.allColumnList
-        : state.fileList.selectedColumnList.split(","),
-    // 文件查看模式
-    fileModel: (state) => state.fileList.fileModel === undefined ? 0 : Number(state.fileList.fileModel),
-    // 网格模式 & 时间线模式下 文件图标大小
-    gridSize: (state) => state.fileList.gridSize
+    // selectedColumnList: (state) =>
+    //   state.fileList.selectedColumnList === undefined
+    //     ? config.allColumnList
+    //     : state.fileList.selectedColumnList.split(","),
+    // // 文件查看模式
+    // fileModel: (state) => state.fileList.fileModel === undefined ? 0 : Number(state.fileList.fileModel),
+    // // 网格模式 & 时间线模式下 文件图标大小
+    // gridSize: (state) => state.fileList.gridSize
   },
   mutations: {
     //
