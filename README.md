@@ -2,7 +2,7 @@
 Crato在线网盘系统
 
 ## 下载项目
-git clone git@47.100.216.16:zhujian/nashcloud_product.git
+git@47.100.216.16:chenjikang/Crato-CloudDisk.git
 
 ## 安装依赖
 npm install
