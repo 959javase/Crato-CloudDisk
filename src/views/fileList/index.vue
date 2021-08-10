@@ -4,7 +4,7 @@
       <el-upload class="upload-file" ref="upload" action="https://api-hk.decoo.io/pinning/pinFile"
         :headers="headers" :data="datas" :before-upload="beforeUpload"
         :on-success="fileUploadSuccess" :on-change="fileAdded" :auto-upload="false">
-        <el-button slot="trigger" type="primary">文件上传</el-button>
+        <el-button slot="trigger" type="primary" icon="el-icon-upload">文件上传</el-button>
         <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
       </el-upload>
       <!-- <el-button type="primary" size="default" @click="floderUpload">文件夹上传</el-button> -->
@@ -183,9 +183,8 @@ export default {
     this.userInfo = JSON.parse(this.user.userInfoObj)
     this.userServiceType = this.userInfo.serviceType
     this.queryParams.username = this.userInfo.name
+
     if (this.userServiceType == 1) {
-      // console.log(Date.parse(new Date(this.userInfo.expiredTime)))
-      // this.storageDays =
       let nowDate = new Date()
       // TODO: 这个有效期还需要再确认下
       this.storageDays = globalFunction.getNumberOfDays(

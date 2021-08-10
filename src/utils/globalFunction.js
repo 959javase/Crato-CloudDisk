@@ -10,23 +10,83 @@ const globalFunction = {
    * @returns {string} 文件大小（带单位）
    */
   calculateFileSize: function(size) {
-    const B = 1024
-    const KB = Math.pow(1024, 2)
-    const MB = Math.pow(1024, 3)
-    const GB = Math.pow(1024, 4)
+    const KB = 1024
+    const MB = Math.pow(1024, 2)
+    const GB = Math.pow(1024, 3)
+    const TB = Math.pow(1024, 4)
     if (!size) {
       return '_'
     } else if (size < KB) {
-      return (size / B).toFixed(0) + 'KB'
+      return (size / KB).toFixed(0) + 'KB'
     } else if (size < MB) {
-      return (size / KB).toFixed(1) + 'MB'
+      return (size / MB).toFixed(1) + 'MB'
     } else if (size < GB) {
-      return (size / MB).toFixed(2) + 'GB'
+      return (size / GB).toFixed(2) + 'GB'
     } else {
-      return (size / GB).toFixed(3) + 'TB'
+      return (size / TB).toFixed(3) + 'TB'
     }
   },
-
+  /**
+   *
+   * @param {Date} time 需要格式化的日期
+   * @param {String} pattern 格式化格式 {y}-{m}-{d} {h}:{i}:{s}
+   * @returns 格式化后的日期
+   */
+  parseTime: function(time, pattern) {
+    if (arguments.length === 0 || !time) {
+      return null
+    }
+    const format = pattern || '{y}-{m}-{d} {h}:{i}:{s}'
+    let date
+    if (typeof time === 'object') {
+      date = time
+    } else {
+      if (typeof time === 'string' && /^[0-9]+$/.test(time)) {
+        time = parseInt(time)
+      } else if (typeof time === 'string') {
+        time = time.replace(new RegExp(/-/gm), '/')
+      }
+      if (typeof time === 'number' && time.toString().length === 10) {
+        time = time * 1000
+      }
+      date = new Date(time)
+    }
+    const formatObj = {
+      y: date.getFullYear(),
+      m: date.getMonth() + 1,
+      d: date.getDate(),
+      h: date.getHours(),
+      i: date.getMinutes(),
+      s: date.getSeconds(),
+      a: date.getDay(),
+    }
+    const time_str = format.replace(/{(y|m|d|h|i|s|a)+}/g, (result, key) => {
+      let value = formatObj[key]
+      // Note: getDay() returns 0 on Sunday
+      if (key === 'a') {
+        return ['日', '一', '二', '三', '四', '五', '六'][value]
+      }
+      if (result.length > 0 && value < 10) {
+        value = '0' + value
+      }
+      return value || 0
+    })
+    return time_str
+  },
+  /**
+   *
+   * @param {Number} num 获取距离当天日期的天数 ex：0 当天；1 明天；-1 昨天
+   * @returns 日期 YYYY-MM-DD
+   */
+  getNumDate: function(num) {
+    //今天时间
+    let today = new Date()
+    today.setDate(today.getDate() + num)
+    //num是正数表示之后的时间，num负数表示之前的时间，0表示今天
+    let time =
+      today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate()
+    return time
+  },
   /**
    * 保留小数向上取整
    * @param {number} num 原数字
@@ -91,7 +151,7 @@ const globalFunction = {
     return result
   },
   /**
-   * 
+   *
    * @param {Date} startDate 开始日期
    * @param {Date} endDate 被减日期
    * @returns 日期天数

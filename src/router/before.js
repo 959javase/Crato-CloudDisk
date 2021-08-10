@@ -10,6 +10,15 @@ router.beforeEach((to, from, next) => {
         path: '/login',
         query: { Rurl: to.fullPath }, //  将to参数中的url传递给login页面进行操作
       })
+    } else if (!store.getters.userServiceType) {
+      if (to.path == '/serviceOpen') {
+        next()
+      } else {
+        next({
+          path: '/serviceOpen',
+        })
+      }
+      // next()
     } else {
       next() // 正常跳转
     }

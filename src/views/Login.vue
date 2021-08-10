@@ -76,7 +76,7 @@
 <script>
 import DragVerify from '@/components/common/DragVerify.vue' //  引入滑动解锁组件
 import Header from '@/components/Header.vue'
-import { login, mobileLogin, sendSms } from '@/request/user.js'
+import { login, queryAccount, mobileLogin, sendSms } from '@/request/user.js'
 import GetPhoneCode from '@/components/getPhoneCode'
 import globalFunction from '@/utils/globalFunction.js'
 export default {
@@ -147,7 +147,7 @@ export default {
       //   center: true,
       //   type: 'success'
       // })
-      this.$router.replace({ name: 'File' })
+      this.$router.replace({ name: '/' })
     }
   },
   methods: {
@@ -179,54 +179,68 @@ export default {
           login(this.loginForm)
             .then((res) => {
               globalFunction.setCookies('token', res.data.token)
-              this.$store.dispatch('Login', res.data)
+              // this.$store.state
+              // this.$store.dispatch('Login', res.data)
               this.$refs[formName].resetFields()
-              this.$notify({
-                title: '成功',
-                message: '登陆成功',
-                type: 'success',
-              })
-              this.$router.push({ path: '/' })
-              this.loading = false
+              queryAccount({ userId: res.data.userId })
+                .then((res) => {
+                  let { data } = res
+                  let { bizCrato } = data
+                  let userInfo = {}
+                  if (bizCrato) {
+                    userInfo = {
+                      name: data.name,
+                      mobile: data.mobile,
+                      userId: data.id,
+                      type: data.type,
+                      balance: data.balance,
+                      belong: data.belong,
+                      fixedSpace: bizCrato.fixedSpace,
+                      used: bizCrato.used,
+                      product: bizCrato.product,
+                      serviceType: bizCrato.serviceType,
+                      expiredTime: bizCrato.expiredTime,
+                    }
+                    this.$notify({
+                      title: '成功',
+                      message: '登陆成功',
+                      type: 'success',
+                    })
+                    this.$store.commit('changeIsLogin', true)
+                    this.$store.commit('changeUserInfoObj', userInfo)
+                    this.loading = false
+                    this.$router.push({ path: '/' })
+                  } else {
+                    userInfo = {
+                      name: data.name,
+                      mobile: data.mobile,
+                      userId: data.id,
+                      type: data.type,
+                      balance: data.balance,
+                      belong: data.belong,
+                    }
+                    this.$notify({
+                      title: '成功',
+                      message: '登陆成功',
+                      type: 'success',
+                    })
+                    // sessionStorage.setItem('isLogin', true)
+                    // sessionStorage.setItem('userInfoObj', JSON.stringify(userInfo))
+                    this.$store.commit('changeIsLogin', true)
+                    this.$store.commit('changeUserInfoObj', userInfo)
+                    this.loading = false
+                    this.$router.push({ path: '/serviceOpen' })
+                  }
+                })
+                .catch((err) => {
+                  console.log(err)
+                  this.loading = false
+                })
             })
             .catch((error) => {
+              console.log(error)
               this.loading = false
             })
-          // })
-          // 表单各项校验通过
-          // login(this.loginForm).then((res) => {
-          //   if (res.code === 0) {
-          //     // 登陆成功
-          //     this.setCookies('token', res.data.token) //  存储登录状态
-          //     this.$refs[formName].resetFields() //  清空表单
-          //     this.$notify({
-          //       title: '成功',
-          //       message: '登陆成功',
-          //       type: 'success',
-          //     })
-          //     this.$router.replace({ path: '/fileList' })
-          //   } else {
-          //     // 登陆失败
-          //     this.loginBtnDisabled = true
-          //     this.isPassing = false
-          //     this.$refs.dragVerifyRef.reset()
-          //     this.$message.error(res.description)
-          //   }
-
-          // if (res.success) {
-          //   this.setCookies('token', res.data.token) //  存储登录状态
-          //   this.$refs[formName].resetFields() //  清空表单
-          //   this.$router.replace(this.url) //  跳转到前一个页面或者网盘主页
-          // } else {
-          //   this.$message.error('手机号或密码错误！')
-          //   this.isPassing = false
-          //   this.$refs.dragVerifyRef.reset()
-          // }
-
-          //   })
-          // } else {
-          //   this.$message.error('请输入正确信息')
-          //   return false
         }
       })
     },

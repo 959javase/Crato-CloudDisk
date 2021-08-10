@@ -1,13 +1,13 @@
-import Vue from "vue";
-import Vuex from "vuex";
+import Vue from 'vue'
+import Vuex from 'vuex'
 
 import config from '@/config'
 
-import user from './module/user'  //  用户模块
-import fileList from './module/fileList'  //  文件列表模块
-import sideMenu from './module/sideMenu'  //  左侧菜单模块
-import imgPreview from './module/imgPreview'  //  图片预览模块
-import videoPreview from './module/videoPreview'  //  视频预览模块
+import user from './module/user' //  用户模块
+import fileList from './module/fileList' //  文件列表模块
+import sideMenu from './module/sideMenu' //  左侧菜单模块
+import imgPreview from './module/imgPreview' //  图片预览模块
+import videoPreview from './module/videoPreview' //  视频预览模块
 
 Vue.use(Vuex)
 
@@ -19,9 +19,17 @@ export default new Vuex.Store({
     // 登录状态
     isLogin: (state) => state.user.isLogin,
     // 用户姓名
-    username: (state) => state.user.userInfoObj.username,
-    // 用户ID
-    userId: (state) => state.user.userInfoObj.userId,
+    // username: (state) => state.user.userInfoObj.username,
+    // // 用户ID
+    // userId: (state) => state.user.userInfoObj.userId,
+    // 用户服务类型
+    userServiceType: (state) => {
+      if (state.user.userInfoObj !== {} && state.user.userInfoObj !== '') {
+        return JSON.parse(state.user.userInfoObj).userServiceType
+      } else {
+        return false
+      }
+    },
     // 表格显示列
     // selectedColumnList: (state) =>
     //   state.fileList.selectedColumnList === undefined
@@ -43,6 +51,6 @@ export default new Vuex.Store({
     fileList,
     sideMenu,
     imgPreview,
-    videoPreview
-  }
+    videoPreview,
+  },
 })

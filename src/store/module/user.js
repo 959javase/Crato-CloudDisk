@@ -6,7 +6,7 @@ export default {
   state: {
     isLogin: sessionStorage.getItem('isLogin') || false, //  用户登录状态
     token: globalFunction.getCookies('token') || '', // 用户token
-    userInfoObj: sessionStorage.getItem('userInfoObj') || {}, // 用户信息
+    userInfoObj: sessionStorage.getItem('userInfoObj') || '', // 用户信息
     // mk: '', //  用户信息
   },
   mutations: {
@@ -25,8 +25,13 @@ export default {
      * @param {boolean} data 用户信息
      */
     changeUserInfoObj(state, data) {
-      sessionStorage.setItem('userInfoObj', JSON.stringify(data))
-      state.userInfoObj = Object.assign({}, state.userInfoObj, data)
+      if (data !== {} && data !== '') {
+        sessionStorage.setItem('userInfoObj', JSON.stringify(data))
+        state.userInfoObj = JSON.stringify(data)
+      } else {
+        state.userInfoObj = {}
+      }
+      // state.userInfoObj = Object.assign({}, state.userInfoObj, data)
     },
     // saveMasterKey(state, data) {
     //   state.mk = data
@@ -36,7 +41,7 @@ export default {
     // 账号密码登录
     Login({ commit }, userInfo) {
       commit('changeIsLogin', true)
-      store.dispatch('getUserInfo', userInfo.userId)
+      // store.dispatch('getUserInfo', userInfo.userId)
     },
     // 退出登录
     loginOut({ commit }, context) {
@@ -75,6 +80,7 @@ export default {
         } else {
           userInfo = {
             name: data.name,
+            mobile: data.mobile,
             userId: data.id,
             type: data.type,
             balance: data.balance,

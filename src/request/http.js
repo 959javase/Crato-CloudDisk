@@ -75,11 +75,15 @@ axios.interceptors.response.use(
   // },
   // 服务器状态码不是200的情况
   (error) => {
-    if (error.response.status) {
-      Message({
-        message: error.response.statusText,
-        type: 'error',
-      })
+    if (
+      error.response.status == 500 &&
+      error.response.data.message == 'token无效'
+    ) {
+      // Message({
+      //   message: error.response.statusText,
+      //   type: 'error',
+      // })
+      loginTip()
       return Promise.reject(new Error(error.response.statusText))
       // switch (error.response.status) {
       //   case 401:
@@ -88,6 +92,12 @@ axios.interceptors.response.use(
       //   default:
       //     return Promise.reject(error.response)
       // }
+    } else {
+      Message({
+        message: error.response.statusText,
+        type: 'error',
+      })
+      return Promise.reject(new Error(error.response.statusText))
     }
   }
 )

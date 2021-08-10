@@ -23,6 +23,10 @@ import { get, post } from './http'
 export const checkServiceStatus = (p) => get('/crato/checkServiceStatus', p)
 // 开通服务
 export const openCrato = (p) => post('/crato/openCrato', p)
+// 创建付款订单
+export const createOrder = (p) => get('/crato/createOrder', p)
+// 获取微信付款链接
+export const getWxPay = (p) => post('/weixinPay/native', p)
 // 添加文件
 export const addFile = (p) => post('/crato/addFile', p)
 // 文件列表

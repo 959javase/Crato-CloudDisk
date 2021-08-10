@@ -167,10 +167,9 @@ export default {
   },
   created() {
     if (!this.isLogin) return
-    this.$nextTick(() => {
-      this.userInfo = JSON.parse(this.user.userInfoObj)
-    })
-    // console.log(this.userInfo)
+    // this.$store.dispatch('getUserInfo',)
+    // TODO 需要在每个页面对用户 余额 和容量信息更新 需要发送请求，修改getUserInfo
+    this.userInfo =JSON.parse(this.user.userInfoObj)
   },
   computed: {
     ...mapGetters(['isLogin']),

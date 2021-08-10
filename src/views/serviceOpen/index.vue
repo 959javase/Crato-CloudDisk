@@ -14,7 +14,7 @@
       </div>
     </div>
     <!-- 服务开通弹出框 -->
-    <el-dialog title="开通Crato云盘服务" v-loading="loading" :visible.sync="openServiceShow" center
+    <el-dialog title="开通Crato云盘服务" :visible.sync="openServiceShow" center
       :close-on-click-modal="false">
       <el-form :model="serviceFrom">
         <el-form-item label="服务方式" :label-width="formLabelWidth">
@@ -26,12 +26,13 @@
         </el-form-item>
         <template v-if="serviceFrom.serviceType === 1">
           <el-form-item label="存储空间" :label-width="formLabelWidth">
-            <el-input v-model="serviceFrom.space" autocomplete="off" :style="{width: '30%'}">
+            <el-input v-model="serviceFrom.space" @change="getTotalPay" autocomplete="off"
+              :style="{width: '30%'}">
               <template slot="append">G</template>
             </el-input>
           </el-form-item>
           <el-form-item label="服务期限" :label-width="formLabelWidth">
-            <el-select v-model="serviceFrom.duration" placeholder="请选择服务期限">
+            <el-select v-model="serviceFrom.duration" @change="getTotalPay" placeholder="请选择服务期限">
               <el-option label="3个月" :value="90"></el-option>
               <el-option label="6个月" :value="180"></el-option>
               <el-option label="12个月" :value="365"></el-option>
@@ -39,7 +40,8 @@
             </el-select>
           </el-form-item>
           <el-form-item label="预付费合计" :label-width="formLabelWidth">
-            <el-input :style="{border:'none',width: '30%'}" disabled v-model="getPrepayTotal"
+            <el-input :style="{border:'none',width: '30%'}"
+              v-loading.fullscreen.lock="dialogLoading" disabled v-model="orderInfo.amount"
               autocomplete="off">
               <template slot="append">元</template>
             </el-input>
@@ -61,27 +63,45 @@
         </el-descriptions-item>
       </el-descriptions>
       <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="openService">开 通</el-button>
+        <el-button type="primary" @click="openService(serviceFrom.serviceType)">
+          {{serviceFrom.serviceType == 0 ? '开 通' : '付费开通'}}</el-button>
       </div>
     </el-dialog>
-
+    <el-dialog title="付款" :visible.sync="dialogPay" width="30%" center
+      :close-on-click-modal="false">
+      <div class="qrcode">
+        <div class="qrcode_title">容量:{{serviceFrom.space}}G,期限:{{serviceFrom.duration}}天</div>
+        <div class="qrcode_img">
+          <vue-qr :text="payUrl" :logoScale="0.3" :whiteMargin="true" :callback="test" qid="testid">
+          </vue-qr>
+        </div>
+        <div class="qrcode_tip">请使用微信扫码付款</div>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogPay = false">再想想</el-button>
+        <el-button type="primary" @click="dialogPay = false">已付款</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import Header from '@/components/Header.vue'
-import { checkServiceStatus, openCrato } from '@/request/crato.js'
+import { openCrato, createOrder, getWxPay } from '@/request/crato.js'
 import { mapState } from 'vuex'
+import VueQr from 'vue-qr'
 
 export default {
   name: 'serviceOpen',
   components: {
     Header,
+    VueQr,
   },
   data() {
     return {
       // 弹出框是否显示
       openServiceShow: false,
+      dialogPay: false,
       formLabelWidth: '120px',
       serviceFrom: {
         // username: ,
@@ -91,8 +111,14 @@ export default {
       isAgree: false,
       loading: false,
       userId: null,
+      orderInfo: {
+        amount: 0,
+      },
+      payUrl: '',
+      dialogLoading: false,
     }
   },
+  mounted() {},
   created() {
     this.serviceFrom.name = JSON.parse(this.user.userInfoObj).name
     this.userId = JSON.parse(this.user.userInfoObj).userId
@@ -100,32 +126,68 @@ export default {
   },
   computed: {
     ...mapState(['user']),
-    getPrepayTotal: function () {
-      return (this.serviceFrom.space * this.serviceFrom.duration * 5) / 1000
-    },
+    // getPrepayTotal: function () {
+    //   return (this.serviceFrom.space * this.serviceFrom.duration * 5) / 1000
+    // },
   },
   watch: {
-    getPrepayTotal: {
-      handler: function () {
-        this.serviceFrom.prepayTotal =
-          (this.serviceFrom.space * this.serviceFrom.duration * 5) / 1000
-        return (this.serviceFrom.space * this.serviceFrom.duration * 5) / 1000
-      },
-    },
+    // getPrepayTotal: {
+    //   handler: function () {
+    //     this.serviceFrom.prepayTotal =
+    //       (this.serviceFrom.space * this.serviceFrom.duration * 5) / 1000
+    //     return (this.serviceFrom.space * this.serviceFrom.duration * 5) / 1000
+    //   },
+    // },
   },
 
   methods: {
-    openService() {
+    test(dataUrl, id) {
+      console.log(dataUrl, id)
+    },
+    getTotalPay() {
+      if (this.serviceFrom.space && this.serviceFrom.duration) {
+        this.dialogLoading = true
+        createOrder({
+          username: this.serviceFrom.name,
+          fileSize: this.serviceFrom.space,
+          days: this.serviceFrom.duration,
+          userType: this.serviceFrom.serviceType,
+        }).then((res) => {
+          this.orderInfo = res.data
+          this.dialogLoading = false
+        })
+      }
+    },
+    openService(type) {
       if (this.isAgree) {
         this.loading = true
-        openCrato(this.serviceFrom).then((res) => {
-          console.log(res);
-          this.$store.dispatch('getUserInfo', this.userId)
-          this.loading = false
-        })
-        .catch((err)=> {
-          this.loading = false
-        })
+        console.log(type)
+        this.dialogLoading = true
+        if (type == 0) {
+          console.log('无需付费开通')
+        } else {
+          console.log('需要付费开通')
+          getWxPay({
+            orderNo: this.orderInfo.orderNo,
+            amount: this.orderInfo.amount,
+            origin: 'crato',
+            description: this.orderInfo.orderDesc,
+            user: this.serviceFrom.name,
+          }).then((res) => {
+            console.log(res.message)
+            this.dialogLoading = false
+            this.payUrl = res.message
+            this.dialogPay = true
+          })
+        }
+        // openCrato(this.serviceFrom)
+        //   .then((res) => {
+        //     this.$store.dispatch('getUserInfo', this.userId)
+        //     this.loading = false
+        //   })
+        //   .catch((err) => {
+        //     this.loading = false
+        //   })
       } else {
         this.$message({
           message: '请阅读付费标准后同意后确认开通',
@@ -154,4 +216,9 @@ export default {
       .open_btn
         // width: 100px
         height: 50px
+.qrcode
+  text-align: center
+  .qrcode_title
+    font-size: 20px
+    font-weight: bold
 </style>
