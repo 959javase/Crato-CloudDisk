@@ -15,7 +15,7 @@
     </div>
     <!-- 服务开通弹出框 -->
     <el-dialog title="开通Crato云盘服务" :visible.sync="openServiceShow" center
-      :close-on-click-modal="false">
+      :close-on-click-modal="false" v-loading.fullscreen.lock="dialogLoading">
       <el-form :model="serviceFrom">
         <el-form-item label="服务方式" :label-width="formLabelWidth">
           <el-radio-group v-model="serviceFrom.serviceType">
@@ -40,8 +40,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="预付费合计" :label-width="formLabelWidth">
-            <el-input :style="{border:'none',width: '30%'}"
-              v-loading.fullscreen.lock="dialogLoading" disabled v-model="orderInfo.amount"
+            <el-input :style="{border:'none',width: '30%'}" disabled v-model="orderInfo.amount"
               autocomplete="off">
               <template slot="append">元</template>
             </el-input>
@@ -67,8 +66,8 @@
           {{serviceFrom.serviceType == 0 ? '开 通' : '付费开通'}}</el-button>
       </div>
     </el-dialog>
-    <el-dialog title="付款" :visible.sync="dialogPay" width="30%" center
-      :close-on-click-modal="false">
+    <el-dialog title="付款" :visible.sync="dialogPay" width="30%" center :close-on-click-modal="false"
+      :show-close="false" :close-on-press-escape="false">
       <div class="qrcode">
         <div class="qrcode_title">容量:{{serviceFrom.space}}G,期限:{{serviceFrom.duration}}天</div>
         <div class="qrcode_img">
@@ -79,7 +78,7 @@
       </div>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogPay = false">再想想</el-button>
-        <el-button type="primary" @click="dialogPay = false">已付款</el-button>
+        <el-button type="primary" @click="getOrderSateActive">已付款</el-button>
       </span>
     </el-dialog>
   </div>
@@ -87,9 +86,15 @@
 
 <script>
 import Header from '@/components/Header.vue'
-import { openCrato, createOrder, getWxPay } from '@/request/crato.js'
+import {
+  openCrato,
+  createOrder,
+  getWxPay,
+  queryOrderState,
+} from '@/request/crato.js'
 import { mapState } from 'vuex'
 import VueQr from 'vue-qr'
+import { queryAccount } from '@/request/user.js'
 
 export default {
   name: 'serviceOpen',
@@ -107,6 +112,7 @@ export default {
         // username: ,
         serviceType: 0,
         prepayTotal: 0,
+        space: 100,
       },
       isAgree: false,
       loading: false,
@@ -116,6 +122,7 @@ export default {
       },
       payUrl: '',
       dialogLoading: false,
+      getOrderStateTimer: '',
     }
   },
   mounted() {},
@@ -141,9 +148,48 @@ export default {
   },
 
   methods: {
+    // 生成二维码时
     test(dataUrl, id) {
-      console.log(dataUrl, id)
+      // console.log(dataUrl, id)
     },
+    // 获取订单状态
+    getOrderState() {
+      queryOrderState({
+        orderNo: this.orderInfo.orderNo,
+      }).then((res) => {
+        console.log(res)
+        if (res.code == '200' && res.message == '1') {
+          this.$message.success('支付成功，正在开通服务')
+          clearTimeout(this.getOrderStateTimer)
+          this.dialogPay = false
+          this.openServiceShow = false
+          this.dialogLoading = true
+          this.openCrato()
+        } else {
+          clearTimeout(this.getOrderStateTimer)
+          this.getOrderStateTimer = setInterval(() => {
+            this.getOrderState()
+          }, 1000)
+        }
+      })
+    },
+    // 手动获取订单状态
+    getOrderSateActive() {
+      this.dialogLoading = true
+      queryOrderState({
+        orderNo: this.orderInfo.orderNo,
+      }).then((res) => {
+        if (res.code == '200' && res.message == '1') {
+          this.openServiceShow = false
+          this.openCrato()
+          this.$message.success('支付成功，正在开通服务')
+        } else {
+          this.dialogLoading = false
+          this.$message.error('查询订单支付失败，请确认是否付款')
+        }
+      })
+    },
+    // 获取总价
     getTotalPay() {
       if (this.serviceFrom.space && this.serviceFrom.duration) {
         this.dialogLoading = true
@@ -158,15 +204,18 @@ export default {
         })
       }
     },
+    // 开通服务
     openService(type) {
       if (this.isAgree) {
-        this.loading = true
-        console.log(type)
         this.dialogLoading = true
         if (type == 0) {
-          console.log('无需付费开通')
+          this.openCrato()
         } else {
-          console.log('需要付费开通')
+          if (this.serviceFrom.space < 100) {
+            this.$message.error('最低100G容量起购')
+            this.dialogLoading = false
+            return
+          }
           getWxPay({
             orderNo: this.orderInfo.orderNo,
             amount: this.orderInfo.amount,
@@ -174,26 +223,90 @@ export default {
             description: this.orderInfo.orderDesc,
             user: this.serviceFrom.name,
           }).then((res) => {
-            console.log(res.message)
             this.dialogLoading = false
             this.payUrl = res.message
             this.dialogPay = true
+            this.getOrderStateTimer = setInterval(() => {
+              this.getOrderState()
+            }, 1000)
           })
         }
-        // openCrato(this.serviceFrom)
-        //   .then((res) => {
-        //     this.$store.dispatch('getUserInfo', this.userId)
-        //     this.loading = false
-        //   })
-        //   .catch((err) => {
-        //     this.loading = false
-        //   })
       } else {
         this.$message({
           message: '请阅读付费标准后同意后确认开通',
           type: 'warning',
         })
       }
+    },
+    // 付款成功或无需付款开通服务
+    openCrato() {
+      openCrato(this.serviceFrom)
+        .then((res) => {
+          this.dialogLoading = false
+          this.openServiceShow = false
+          this.updateUserInfo(this.userId)
+        })
+        .catch((err) => {
+          this.dialogLoading = false
+          this.$message.eror('开通失败')
+        })
+    },
+    // 更新用户数据
+    updateUserInfo(userid) {
+      queryAccount({ userId: userid })
+        .then((res) => {
+          let { data } = res
+          let { bizCrato } = data
+          let userInfo = {}
+          if (bizCrato) {
+            userInfo = {
+              name: data.name,
+              mobile: data.mobile,
+              userId: data.id,
+              type: data.type,
+              balance: data.balance,
+              belong: data.belong,
+              fixedSpace: bizCrato.fixedSpace,
+              used: bizCrato.used,
+              product: bizCrato.product,
+              serviceType: bizCrato.serviceType,
+              expiredTime: bizCrato.expiredTime,
+            }
+            this.$notify({
+              title: '服务开通成功',
+              message: '服务开通成功',
+              type: 'success',
+            })
+            this.$store.commit('changeIsLogin', true)
+            this.$store.commit('changeUserInfoObj', userInfo)
+            this.loading = false
+            this.$router.push({ path: '/' })
+          } else {
+            userInfo = {
+              name: data.name,
+              mobile: data.mobile,
+              userId: data.id,
+              type: data.type,
+              balance: data.balance,
+              belong: data.belong,
+            }
+            this.$notify({
+              title: '服务开通成功',
+              message: '服务开通成功',
+              type: 'success',
+            })
+            // sessionStorage.setItem('isLogin', true)
+            // sessionStorage.setItem('userInfoObj', JSON.stringify(userInfo))
+            this.$store.commit('changeIsLogin', true)
+            this.$store.commit('changeUserInfoObj', userInfo)
+            this.loading = false
+            this.$router.push({ path: '/serviceOpen' })
+          }
+        })
+        .catch((err) => {
+          console.log(err)
+          this.loading = false
+        })
     },
   },
 }

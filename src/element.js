@@ -59,6 +59,10 @@ import {
   Descriptions,
   DescriptionsItem,
   Tag,
+  Card,
+  Row,
+  Col,
+  Empty,
 } from "element-ui";
 
 const element = {
@@ -119,6 +123,10 @@ const element = {
     Vue.use(Descriptions);
     Vue.use(DescriptionsItem);
     Vue.use(Tag);
+    Vue.use(Card);
+    Vue.use(Row);
+    Vue.use(Col);
+    Vue.use(Empty);
     Vue.prototype.$loading = Loading.service;
     Vue.prototype.$msgbox = MessageBox;
     Vue.prototype.$alert = MessageBox.alert;

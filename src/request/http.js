@@ -5,13 +5,11 @@ import { MessageBox, Notification, Message } from 'element-ui'
 
 // 登录提醒
 const loginTip = function() {
-  MessageBox.alert('您尚未登录，请先登录', '操作提示', {
+  MessageBox.alert('登录已失效，请重新登录', '操作提示', {
     confirmButtonText: '确定',
     callback: () => {
-      router.push({
-        path: '/login',
-        query: { Rurl: router.currentRoute.fullPath }, //  将当前页面的url传递给login页面进行操作
-      })
+       // tokne失效跳转登录页
+       window.location.href = '/'
     },
   })
 }
@@ -58,6 +56,8 @@ axios.interceptors.request.use(
 axios.interceptors.response.use(
   (res) => {
     if (res.data.code === 0 || res.data.Code === 200 || res.status === 200) {
+      // 续签token
+      globalFunction.setCookies('token', res.headers.authorization)
       return res
     } else {
       Message({
@@ -83,6 +83,9 @@ axios.interceptors.response.use(
       //   message: error.response.statusText,
       //   type: 'error',
       // })
+      sessionStorage.removeItem('isLogin')
+      sessionStorage.removeItem('userInfoObj')
+      globalFunction.removeCookies('token')
       loginTip()
       return Promise.reject(new Error(error.response.statusText))
       // switch (error.response.status) {

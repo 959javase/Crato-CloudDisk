@@ -15,6 +15,7 @@ import '@/assets/styles/iconfont/iconfont.css'
 import '@/assets/styles/css/mediaScreen.styl'
 import '@/router/before.js'
 import 'element-ui/lib/theme-chalk/index.css'
+import Pagination from '@/components/Pagination'
 import element from './element.js'
 // import decoo from '@decooio/sdk'
 
@@ -27,7 +28,7 @@ import uploader from 'vue-simple-uploader'
 import CollapseTransition from 'element-ui/lib/transitions/collapse-transition'
 
 Vue.component(CollapseTransition.name, CollapseTransition)
-
+Vue.component('Pagination', Pagination)
 Vue.config.productionTip = false
 
 for (let key in globalFunction) {

@@ -25,7 +25,7 @@ export default new Vuex.Store({
     // 用户服务类型
     userServiceType: (state) => {
       if (state.user.userInfoObj !== {} && state.user.userInfoObj !== '') {
-        return JSON.parse(state.user.userInfoObj).userServiceType
+        return JSON.parse(state.user.userInfoObj).serviceType
       } else {
         return false
       }

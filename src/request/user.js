@@ -45,3 +45,4 @@ export const checkname = (p) => get('/accounts/checkUsername', p)
 export const checkmobile = (p) => get('/accounts/checkMobile', p)
 // 修改密码
 export const updatePassword = (p) => get('/accounts/updatePassword', p)
+

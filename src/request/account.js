@@ -20,16 +20,6 @@ import { get, post } from './http'
  */
 
 // 查询用户服务类型
-export const checkServiceStatus = (p) => get('/crato/checkServiceStatus', p)
-// 开通服务
-export const openCrato = (p) => post('/crato/openCrato', p)
-// 创建付款订单
-export const createOrder = (p) => get('/crato/createOrder', p)
-// 获取微信付款链接
-export const getWxPay = (p) => post('/weixinPay/native', p)
-// 查询微信支付订单状态
-export const queryOrderState = (p) => get('/weixinPay/queryOrderState', p)
-// 添加文件
-export const addFile = (p) => post('/crato/addFile', p)
-// 文件列表
-export const listFile = (p) => get('/crato/listFile', p)
+export const getAccountList = (p) => get('/accounts/getAccountList', p)
+// 创建子账号
+export const createSubAccount = (p) => post('/accounts/createSubAccount', p)

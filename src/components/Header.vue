@@ -35,13 +35,15 @@
             <!-- <el-descriptions-item label="用户名">{{userInfo.name}}</el-descriptions-item> -->
             <el-descriptions-item label="手机号">{{userInfo.mobile}}</el-descriptions-item>
             <el-descriptions-item label="账户余额">{{userInfo.balance}}元</el-descriptions-item>
-            <el-descriptions-item label="账号类型">{{userInfo.serviceType == 0 ? '按次付费' : '存储容量预付费'}}
+            <el-descriptions-item v-if="userInfo.serviceType" label="账号类型">{{userInfo.serviceType == 0 ? '按次付费' : '存储容量预付费'}}
+            </el-descriptions-item>
+            <el-descriptions-item v-else label="账号类型">未开通服务
             </el-descriptions-item>
             <el-descriptions-item v-if="userInfo.serviceType == 1" label="已用/总容量">
               {{userInfo.used}}/{{userInfo.fixedSpace}}G
             </el-descriptions-item>
           </el-descriptions>
-          <el-progress :percentage="storagePercentage" :color="customColors"></el-progress>
+          <el-progress v-if="userInfo.serviceType == 1" :percentage="storagePercentage" :color="customColors"></el-progress>
         </div>
         <div class="drawer-wrap_about">
           <el-collapse v-model="activeName" accordion>

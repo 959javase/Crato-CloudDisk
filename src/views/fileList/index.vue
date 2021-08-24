@@ -3,7 +3,8 @@
     <div class="file-header">
       <el-upload class="upload-file" ref="upload" action="https://api-hk.decoo.io/pinning/pinFile"
         :headers="headers" :data="datas" :before-upload="beforeUpload"
-        :on-success="fileUploadSuccess" :on-change="fileAdded" :auto-upload="false">
+        :on-success="fileUploadSuccess" :on-change="fileAdded" :on-error="fileError"
+        :auto-upload="false" :limit="1" :file-list="uploadFileList">
         <el-button slot="trigger" type="primary" icon="el-icon-upload">文件上传</el-button>
         <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
       </el-upload>
@@ -50,11 +51,12 @@
         </template>
       </el-table-column>
     </el-table>
-    <el-pagination v-show="fileList.length>0" :total="fileList.length"
+    <pagination v-show="fileList.length>0" :total="fileList.length"
       :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" background />
-
+    <!-- 按次收费上传 -->
     <el-dialog :title="userServiceType == 0 ? '按次收费上传文件' : '上传文件'" :visible.sync="openUploadShow"
-      center :close-on-click-modal="false">
+      center :close-on-click-modal="false" :show-close="false"
+      v-loading.fullscreen.lock="dialogLoading" width="40%" min-width="570px">
       <el-form>
         <!-- 按次付费上传文件 -->
         <template v-if="userServiceType == 0">
@@ -62,6 +64,8 @@
             <el-input v-model="fileSize" autocomplete="off" :style="{width: '30%'}" disabled>
               <template slot="append">G</template>
             </el-input>
+            <el-tag :style="{marginLeft:'10px'}" type="danger" size="mini">上传文件不足10MB按照10MB收费
+            </el-tag>
           </el-form-item>
           <el-form-item label="存储期限" :label-width="formLabelWidth">
             <el-select v-model="storageDays" @change="storageDaysChange" placeholder="请选择服务期限">
@@ -72,12 +76,19 @@
             </el-select>
           </el-form-item>
           <el-form-item label="费用合计" :label-width="formLabelWidth">
-            <el-input :style="{border:'none',width: '30%'}" disabled v-model="cost"
+            <el-input :style="{border:'none',width: '30%'}" disabled v-model="orderInfo.amount"
               autocomplete="off">
               <template slot="append">元</template>
             </el-input>
           </el-form-item>
-
+          <div class="qrcode">
+            <div class="qrcode_img">
+              <vue-qr :text="payUrl" :logoScale="0.3" :whiteMargin="true" :callback="test"
+                qid="testid">
+              </vue-qr>
+            </div>
+            <div class="qrcode_tip">请使用微信扫码付款</div>
+          </div>
         </template>
       </el-form>
       <!-- 按存储容量上传文件 -->
@@ -96,13 +107,29 @@
         </template>
       </el-form>
       <div v-if="userServiceType == 0" slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="fileUpload">付费上传</el-button>
+        <el-button @click="fileAbort">取消上传</el-button>
+        <el-button type="primary" @click="getOrderSateActive">已付费上传</el-button>
       </div>
       <div v-if="userServiceType == 1" slot="footer" class="dialog-footer">
+        <el-button @click="fileAbort">取消上传</el-button>
         <el-button type="primary" @click="fileUpload">上传文件</el-button>
       </div>
     </el-dialog>
-
+    <!-- <el-dialog title="付款" :visible.sync="dialogPay" width="30%" center :close-on-click-modal="false"
+      :show-close="false" :close-on-press-escape="false">
+      <div class="qrcode">
+        <div class="qrcode_title">容量:{{fileSize}}G,期限:{{storageDays}}天</div>
+        <div class="qrcode_img">
+          <vue-qr :text="payUrl" :logoScale="0.3" :whiteMargin="true" :callback="test" qid="testid">
+          </vue-qr>
+        </div>
+        <div class="qrcode_tip">请使用微信扫码付款</div>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogPay = false">再想想</el-button>
+        <el-button type="primary" @click="getOrderSateActive">已付款</el-button>
+      </span>
+    </el-dialog> -->
   </div>
 </template>
 
@@ -114,10 +141,21 @@ import crypto from 'public-encrypt/index'
 import { RSAkey } from '@/common/RASkey'
 import { Buffer } from 'safe-buffer/index'
 import globalFunction from '@/utils/globalFunction.js'
-import { addFile, listFile } from '@/request/crato.js'
+import VueQr from 'vue-qr'
+import {
+  addFile,
+  listFile,
+  openCrato,
+  createOrder,
+  getWxPay,
+  queryOrderState,
+} from '@/request/crato.js'
 
 export default {
   name: 'Article',
+  components: {
+    VueQr,
+  },
   data() {
     return {
       formLabelWidth: '120px',
@@ -167,6 +205,18 @@ export default {
       // surplusStroage: 0,
       // 下载src
       downloadSrc: '',
+      dialogLoading: false,
+      // 订单信息
+      orderInfo: {},
+      // 付款弹窗页面
+      dialogPay: false,
+      // 付款二维码url
+      payUrl: '',
+      getOrderStateTimer: '',
+      // 支付成功标识
+      payTag: false,
+      // 上传文件列表
+      uploadFileList: [],
     }
   },
   computed: {
@@ -222,68 +272,56 @@ export default {
           const { data } = res
           // this.decooToken = data.data
           this.headers.useraccesstoken = data.Data
+          console.log('3 useraccesstoken成功')
+          this.fileUpload()
         })
         .catch((err) => {
           console.log(err)
         })
     },
-    fileAdded(file) {
+    async fileAdded(file) {
       // 只让在文件选择完成后触发
       if (file.status !== 'ready') return
-      // 计算文件大小单位是G，最小为1
+      // 计算文件大小单位是G，最小为0.01G
       const GB = Math.pow(1024, 3)
-      // 小于1MB的文件按照0.001GB
+      // 小于10MB的文件按照0.01GB
       const MB = Math.pow(1024, 2)
-      if (file.size > MB) {
+      if (file.size > 10 * MB) {
         this.fileSize = globalFunction.downFixed(file.size / GB, 3)
       } else {
-        this.fileSize = 0.001
+        this.fileSize = 0.01
       }
       // 按次上传：计算金额
       if (this.userServiceType == 0) {
-        if (this.fileSize < 1) {
-          this.cost = 1 * 0.01 * this.storageDays
-        } else {
-          this.cost = this.fileSize * 0.01 * this.storageDays
-        }
+        await this.storageDaysChange()
       }
       this.openUploadShow = true
-      console.log(file)
     },
     fileUpload() {
       this.$refs.upload.submit()
     },
-    floderUpload() {
-      console.log('文件夹上传')
+    fileAbort() {
+      this.uploadFileList = []
+      this.openUploadShow = false
+      clearTimeout(this.getOrderStateTimer)
+      this.getOrderStateTimer = ''
+      this.$message.info('取消上传')
     },
     handleUpload(e) {
       let url = `https://ipfs-hk.decoo.io/ipfs/${e.cid}?filename=${e.fileName}`
-      // this.downloadSrc = url
-      // this.$nextTick(() => {
-      //   this.downloadFrame = this.$refs.downloadDia.contentWindow
-      // })
-      // window.location.href = url
-      // // 创建a标签
-      // const link = document.createElement('a')
-      // // download属性
-      // link.setAttribute('download', e.fileName)
-      // // href链接
-      // link.setAttribute('href', url)
-      // // 自执行点击事件
-      // link.click()
-      // document.body.removeChild(link)
-
       window.open(url)
     },
-    handleRenew() {
+    handleRenew(e) {
+      console.log(e);
       console.log('续费这个文件')
     },
     handleDelete() {
       console.log('删除这个文件')
     },
     // 上传文件前：需要获取文件cid、secret
-    // TODOS: 需要在这里算钱
     async beforeUpload(file) {
+      // 重置付款成功标识
+      this.payTag = false
       // 获取文件cid
       const cid = await getFileCid(file)
       this.datas.cid = cid
@@ -294,30 +332,91 @@ export default {
       this.datas.decooOptions = {
         name: file.name,
       }
-      await this.getDecooToken()
-      return new Promise((resolve, reject) => {
-        this.$confirm('确认将此文件上传?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'info',
-        })
-          .then(() => {
-            this.$message({
-              type: 'success',
-              message: '付款成功!',
-            })
-            return resolve(true)
-          })
-          .catch(() => {
-            this.$message({
+      localStorage.setItem('cid', this.datas.cid)
+      
+      addFile({
+        // 账号名称 name
+        name: this.userInfo.name,
+        // fileName
+        fileName: file.name,
+        // cid
+        cid: this.datas.cid,
+        // fileSize
+        fileSize: this.fileSize,
+        storageDays: this.storageDays,
+        cost: this.orderInfo.amount,
+      }).then((res) => {
+        console.log('4将上传订单录入系统成功，下一步上传文件')
+        // 如果是按次付费直接上传
+        if (this.userServiceType == 0) {
+          console.log('5按次付费 直接上传')
+          return true
+        } else {
+          return new Promise((resolve, reject) => {
+            this.$confirm('确认将此文件上传?', '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
               type: 'info',
-              message: '已取消上传',
             })
-            return reject(false)
+              .then(() => {
+                return resolve(true)
+              })
+              .catch(() => {
+                this.$message({
+                  type: 'info',
+                  message: '已取消上传',
+                })
+                this.openUploadShow = false
+                return reject(false)
+              })
           })
+        }
+      })
+      // await this.getDecooToken()
+    },
+    // 手动获取订单状态
+    getOrderSateActive() {
+      this.dialogLoading = true
+      queryOrderState({
+        orderNo: this.orderInfo.orderNo,
+      }).then((res) => {
+        if (res.code == '200' && res.message == '1') {
+          this.dialogLoading = false
+          this.openServiceShow = false
+          this.$message.success('支付成功，正在上传文件')
+          this.getDecooToken()
+        } else {
+          this.dialogLoading = false
+          this.$message.error('查询订单支付失败，请确认是否付款')
+        }
       })
     },
-    getFileUpload() {},
+    // 获取订单状态
+    getOrderState() {
+      queryOrderState({
+        orderNo: this.orderInfo.orderNo,
+      }).then((res) => {
+        if (res.code == '200' && res.message == '1') {
+          // if (true) {
+          clearTimeout(this.getOrderStateTimer)
+          this.getOrderStateTimer = ''
+          // this.dialogPay = false
+          // this.dialogLoading = true
+          this.getDecooToken()
+          console.log('2付款成功，下将上传订单添加到数据库')
+        } else {
+          clearTimeout(this.getOrderStateTimer)
+          this.getOrderStateTimer = ''
+          this.getOrderStateTimer = setTimeout(() => {
+            this.getOrderState()
+          }, 1000)
+        }
+      })
+    },
+    // 生成二维码时
+    test(dataUrl, id) {
+      // console.log(dataUrl, id)
+    },
     // 文件上传中
 
     // 文件上传完成
@@ -328,44 +427,45 @@ export default {
           type: 'success',
           message: '文件上传成功!',
         })
-        let fileSize = 0
-        // 计算文件大小单位是G，最小为1
-        const GB = Math.pow(1024, 3)
-        // 如果是按存储容量文件大小按照实际
-        if (this.userServiceType == 1) {
-          fileSize = globalFunction.upFixed(res.PinSize / GB, 3)
-        } else if (this.userServiceType == 0) {
-          // 按次上传不满1G 按照1G收费
-          if (res.PinSize > GB) {
-            fileSize = globalFunction.upFixed(res.PinSize / GB, 3)
-          } else {
-            fileSize = 1
-          }
-        }
-        addFile({
-          // 账号名称 name
-          name: this.userInfo.name,
-          // fileName
-          fileName: file.name,
-          // cid
-          cid: this.datas.cid,
-          // fileSize
-          fileSize: fileSize,
-          storageDays: this.storageDays,
-          cost: this.cost,
-        }).then((res) => {
-          console.log('完成')
-        })
+        // TODO:将订单状态修改为已上传完成
+        console.log('6修改上传状态为已完成上传');
+        localStorage.removeItem('cid')
       }
     },
-    // 计算按次收费总金额
+    // 文件上传出错
+    fileError() {
+      console.log('上传出错了')
+    },
+    // 计算按次收费总金额&&获取订单
     storageDaysChange() {
-      if (this.fileSize < 1) {
-        this.cost = 1 * 0.05 * this.storageDays
-      } else {
-        this.cost = this.fileSize * 0.05 * this.storageDays
-      }
-      console.log(this.cost)
+      console.log('1获取金额，生成订单号')
+      this.dialogLoading = true
+      createOrder({
+        username: this.queryParams.username,
+        fileSize: this.fileSize,
+        days: this.storageDays,
+        userType: this.userServiceType,
+      }).then((res) => {
+        this.orderInfo = res.data
+        if (res.data.amount < 0.01) {
+          this.orderInfo.amount = 0.01
+        } else {
+          this.orderInfo.amount = this.orderInfo.amount.toFixed(2)
+        }
+        getWxPay({
+          orderNo: this.orderInfo.orderNo,
+          amount: this.orderInfo.amount,
+          origin: 'crato',
+          description: this.orderInfo.orderDesc,
+          user: this.queryParams.username,
+        }).then((res) => {
+          this.dialogLoading = false
+          this.payUrl = res.message
+          this.getOrderStateTimer = setTimeout(() => {
+            this.getOrderState()
+          }, 1000)
+        })
+      })
     },
   },
 }
@@ -374,5 +474,13 @@ export default {
 .file-container
   height: calc(100vh - 109px)
   .file-header
+    width: 50%
     margin-bottom: 20px
+.qrcode
+  display: flex
+  flex-direction: column
+  justify-content: center
+  align-items: center
+  .qrcode_tip
+    color: red
 </style>
