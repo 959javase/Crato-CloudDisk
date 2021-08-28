@@ -88,6 +88,24 @@ const globalFunction = {
     return time
   },
   /**
+   * 计算两个日期之间的天数
+   * @param dateString1  开始日期 yyyy-MM-dd
+   * @param dateString2  结束日期 yyyy-MM-dd
+   * @returns {number} 如果日期相同 返回一天 开始日期大于结束日期，返回0
+   */
+  getDaysBetween: function(dateString1, dateString2) {
+    var startDate = Date.parse(dateString1)
+    var endDate = Date.parse(dateString2)
+    if (startDate > endDate) {
+      return 0
+    }
+    if (startDate == endDate) {
+      return 1
+    }
+    var days = (endDate - startDate) / (1 * 24 * 60 * 60 * 1000)
+    return days
+  },
+  /**
    * 保留小数向上取整
    * @param {number} num 原数字
    * @param {number} fix 保留的小数位数

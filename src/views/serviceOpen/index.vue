@@ -133,18 +133,10 @@ export default {
   },
   computed: {
     ...mapState(['user']),
-    // getPrepayTotal: function () {
-    //   return (this.serviceFrom.space * this.serviceFrom.duration * 5) / 1000
-    // },
+
   },
   watch: {
-    // getPrepayTotal: {
-    //   handler: function () {
-    //     this.serviceFrom.prepayTotal =
-    //       (this.serviceFrom.space * this.serviceFrom.duration * 5) / 1000
-    //     return (this.serviceFrom.space * this.serviceFrom.duration * 5) / 1000
-    //   },
-    // },
+
   },
 
   methods: {
@@ -167,7 +159,7 @@ export default {
           this.openCrato()
         } else {
           clearTimeout(this.getOrderStateTimer)
-          this.getOrderStateTimer = setInterval(() => {
+          this.getOrderStateTimer = setTimeout(() => {
             this.getOrderState()
           }, 1000)
         }
@@ -226,7 +218,7 @@ export default {
             this.dialogLoading = false
             this.payUrl = res.message
             this.dialogPay = true
-            this.getOrderStateTimer = setInterval(() => {
+            this.getOrderStateTimer = setTimeout(() => {
               this.getOrderState()
             }, 1000)
           })

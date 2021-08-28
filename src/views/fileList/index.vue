@@ -31,7 +31,7 @@
           {{scope.$index + 1}}
         </template>
       </el-table-column>
-      <el-table-column label="文件名" align="center" prop="fileName" />
+      <el-table-column label="文件名" align="center" prop="fileName" :show-overflow-tooltip="true" />
       <el-table-column label="大小" align="center" prop="fileSize" />
       <el-table-column label="CID" align="center" prop="cid" />
       <el-table-column label="归属账号" align="center" prop="name" />
@@ -44,15 +44,15 @@
           <el-button size="mini" type="text" icon="el-icon-download"
             @click="handleUpload(scope.row)">下载
           </el-button>
-          <el-button size="mini" type="text" icon="el-icon-money" @click="handleRenew(scope.row)">续费
-          </el-button>
+          <!-- <el-button size="mini" type="text" icon="el-icon-money" @click="handleRenew(scope.row)">续费
+          </el-button> -->
           <!-- <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)">
             删除</el-button> -->
         </template>
       </el-table-column>
     </el-table>
-    <pagination v-show="fileList.length>0" :total="fileList.length"
-      :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" background />
+    <pagination v-show="fileList.length>0" :total="fileList.length" :page.sync="queryParams.pageNum"
+      :limit.sync="queryParams.pageSize" background />
     <!-- 按次收费上传 -->
     <el-dialog :title="userServiceType == 0 ? '按次收费上传文件' : '上传文件'" :visible.sync="openUploadShow"
       center :close-on-click-modal="false" :show-close="false"
@@ -259,7 +259,7 @@ export default {
     getListFile() {
       this.loading = true
       listFile(this.queryParams).then((res) => {
-        this.fileList = res.data
+        this.fileList = res.rows
         this.loading = false
       })
     },
@@ -312,7 +312,7 @@ export default {
       window.open(url)
     },
     handleRenew(e) {
-      console.log(e);
+      console.log(e)
       console.log('续费这个文件')
     },
     handleDelete() {
@@ -333,7 +333,7 @@ export default {
         name: file.name,
       }
       localStorage.setItem('cid', this.datas.cid)
-      
+
       addFile({
         // 账号名称 name
         name: this.userInfo.name,
@@ -428,7 +428,7 @@ export default {
           message: '文件上传成功!',
         })
         // TODO:将订单状态修改为已上传完成
-        console.log('6修改上传状态为已完成上传');
+        console.log('6修改上传状态为已完成上传')
         localStorage.removeItem('cid')
       }
     },

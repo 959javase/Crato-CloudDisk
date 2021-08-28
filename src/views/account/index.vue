@@ -20,20 +20,21 @@
       </el-col>
       <el-col :span="1.5">
         <el-button type="success" plain icon="el-icon-edit" size="mini" :disabled="single"
-          @click="handleUpdate">修改子账号信息</el-button>
+          @click="handleShare">分配容量</el-button>
       </el-col>
-      <el-col :span="1.5">
+      <!-- <el-col :span="1.5">
         <el-button type="danger" plain icon="el-icon-delete" size="mini" :disabled="multiple"
           @click="handleDelete">删除</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport">导出
         </el-button>
-      </el-col>
+      </el-col> -->
       <!-- <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar> -->
     </el-row>
 
-    <el-table v-loading="loading" :data="cruList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" ref="table" :data="cruList"
+      @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="序号" align="center" width="50">
         <template slot-scope="scope">
@@ -41,7 +42,7 @@
         </template>
       </el-table-column>
       <el-table-column label="用户名" align="center" prop="name" />
-      <el-table-column label="密码" align="center" prop="password" />
+      <el-table-column label="容量(GB)" align="center" prop="unused" />
       <el-table-column label="手机号" align="center" prop="mobile" />
       <el-table-column label="账号归属" align="center" prop="belong" />
       <el-table-column label="账号类型" align="center" prop="type" />
@@ -59,11 +60,6 @@
       :limit.sync="queryParams.pageSize" @pagination="getList" />
 
     <!-- 创建子账号对话框 -->
-    <!-- name: null,
-    password: null,
-    confirmPassword: null,
-    mobile: null,
-    belong: null, -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="用户名" prop="name">
@@ -79,7 +75,7 @@
           <el-input v-model="form.mobile" placeholder="请输入手机号" />
         </el-form-item>
         <el-form-item label="账号归属" prop="belong">
-          <el-input v-model="form.belong" placeholder="请输入账号归属" />
+          <el-input v-model="form.belong" placeholder="请输入账号归属" disabled/>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -87,11 +83,34 @@
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
+
+    <!-- 分配容量 -->
+    <el-dialog title="分配容量" :visible.sync="shareOpen" width="500px" append-to-body>
+      <el-form ref="shareForm" :model="shareForm" :rules="shareRules" label-width="80px">
+        <el-form-item label="主账号" prop="fromName">
+          <el-input v-model="shareForm.fromName" disabled />
+        </el-form-item>
+        <el-form-item label="子账号" prop="toName">
+          <el-input v-model="shareForm.toName" disabled />
+        </el-form-item>
+        <el-form-item label="分配容量(GB)" prop="fileSize">
+          <el-input v-model="shareForm.fileSize" placeholder="请输入分配容量" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitShareForm">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { getAccountList, createSubAccount } from '@/request/account.js'
+import {
+  getAccountList,
+  createSubAccount,
+  shareSpace,
+} from '@/request/account.js'
 import { mapState } from 'vuex'
 export default {
   name: 'accountmanager',
@@ -116,17 +135,23 @@ export default {
       title: '',
       // 是否显示弹出层
       open: false,
+      // 分配容量dialog
+      shareOpen: false,
       // 查询参数
       queryParams: {
         pageNum: 1,
         pageSize: 10,
         username: '',
-        key_vision: true,
       },
       // 表单参数
       form: {},
+      // 分配容量参数
+      shareForm: {},
+      // 分配表单校验
+      shareRules: {},
       // 表单校验
       rules: {},
+
       // 登录账号信息
       userInfo: {},
     }
@@ -137,21 +162,19 @@ export default {
   created() {
     this.userInfo = JSON.parse(this.user.userInfoObj)
     this.form.belong = this.userInfo.name
-    this.queryParams.username = this.userInfo.name
+    // this.queryParams.username = this.userInfo.name
     this.getList()
   },
   methods: {
     /** 查询【请填写功能名称】列表 */
     getList() {
       this.loading = true
-      // getAccountList(this.queryParams).then(response => {
       getAccountList({
-        username: this.userInfo.name,
-        key_vision: true,
+        ...this.queryParams,
+        belong: this.userInfo.belong,
       }).then((response) => {
-        console.log(response)
-        this.cruList = response.data
-        // this.total = response.total;
+        this.cruList = response.rows
+        this.total = response.total
         this.loading = false
       })
     },
@@ -162,8 +185,7 @@ export default {
         ...this.queryParams,
         key_vision: false,
       }).then((response) => {
-        console.log(response)
-        this.cruList = response.data
+        this.cruList = response.rows
         // this.total = response.total;
         this.loading = false
       })
@@ -185,7 +207,7 @@ export default {
     /** 搜索按钮操作 */
     handleQuery() {
       this.queryParams.pageNum = 1
-      this.queryList()
+      this.getList()
     },
     /** 重置按钮操作 */
     resetQuery() {
@@ -194,6 +216,15 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
+      if (selection.length > 0) {
+        this.shareForm.fromName = selection[0].belong
+        this.shareForm.toName = selection[0].name
+        // this.shareForm.fileSize = 0
+      }
+      if (selection.length > 1) {
+        this.$refs.table.clearSelection()
+        this.$refs.table.toggleRowSelection(selection.pop())
+      }
       this.ids = selection.map((item) => item.id)
       this.single = selection.length !== 1
       this.multiple = !selection.length
@@ -202,7 +233,11 @@ export default {
     handleAdd() {
       this.reset()
       this.open = true
+      this.form.belong = this.userInfo.name
       this.title = '创建子账号'
+    },
+    handleShare(row) {
+      this.shareOpen = true
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
@@ -231,6 +266,16 @@ export default {
               this.getList()
             })
           }
+        }
+      })
+    },
+    // 分配容量提交
+    submitShareForm() {
+      this.$refs['shareForm'].validate((valid) => {
+        if (valid) {
+          shareSpace(this.shareForm).then((res) => {
+            console.log(res)
+          })
         }
       })
     },
@@ -267,3 +312,8 @@ export default {
   },
 }
 </script>
+<style>
+thead .el-table-column--selection .cell {
+  display: none;
+}
+</style>

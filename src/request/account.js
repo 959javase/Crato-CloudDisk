@@ -23,3 +23,5 @@ import { get, post } from './http'
 export const getAccountList = (p) => get('/accounts/getAccountList', p)
 // 创建子账号
 export const createSubAccount = (p) => post('/accounts/createSubAccount', p)
+// 给子账号分配容量
+export const shareSpace = (p) => get('/crato/shareSpace', p)

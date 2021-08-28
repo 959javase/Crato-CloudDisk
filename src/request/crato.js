@@ -33,3 +33,7 @@ export const queryOrderState = (p) => get('/weixinPay/queryOrderState', p)
 export const addFile = (p) => post('/crato/addFile', p)
 // 文件列表
 export const listFile = (p) => get('/crato/listFile', p)
+// 用户容量延期
+export const deferred = (p) => get('/crato/deferred', p)
+// 用户容量扩容
+export const expand = (p) => get('/crato/expand', p)

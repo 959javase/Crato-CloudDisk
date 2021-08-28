@@ -19,6 +19,7 @@ module.exports = {
     proxy: {
       //配置代理，解决跨域请求后台数据的问题
       '/api': {
+        // http://192.168.31.156:8080
         // "baseUrl": "http://180.119.121.202:9090"
         // "baseUrl": "http://www.nashcloud.cn/api"
         target: productConfig.baseUrl, //后台接口，连接本地服务

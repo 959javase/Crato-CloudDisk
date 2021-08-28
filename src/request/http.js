@@ -8,8 +8,8 @@ const loginTip = function() {
   MessageBox.alert('登录已失效，请重新登录', '操作提示', {
     confirmButtonText: '确定',
     callback: () => {
-       // tokne失效跳转登录页
-       window.location.href = '/'
+      // tokne失效跳转登录页
+      window.location.href = '/'
     },
   })
 }
@@ -57,7 +57,9 @@ axios.interceptors.response.use(
   (res) => {
     if (res.data.code === 0 || res.data.Code === 200 || res.status === 200) {
       // 续签token
-      globalFunction.setCookies('token', res.headers.authorization)
+      if (res.headers.authorization) {
+        globalFunction.setCookies('token', res.headers.authorization)
+      }
       return res
     } else {
       Message({
