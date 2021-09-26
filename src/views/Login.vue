@@ -11,12 +11,12 @@
         <el-form v-if="!isCodeLogin" class="login-form" ref="loginForm" :model="loginForm"
           :rules="loginFormRules" label-width="100px" hide-required-asterisk>
           <el-form-item prop="name">
-            <el-input prefix-icon="el-icon-mobile-phone" v-model="loginForm.name" placeholder="用户名">
+            <el-input prefix-icon="el-icon-mobile-phone" v-model="loginForm.name" placeholder="用户名" clearable>
             </el-input>
           </el-form-item>
           <el-form-item prop="password">
             <el-input prefix-icon="el-icon-lock" v-model="loginForm.password" placeholder="密码"
-              show-password>
+              show-password clearable>
             </el-input>
           </el-form-item>
           <el-form-item>
@@ -36,10 +36,10 @@
 
         <!-- 手机验证码登录 -->
         <el-form v-else class="login-form" ref="codeLoginForm" :model="codeLoginForm"
-          :rules="loginFormRules" label-width="100px" hide-required-asterisk>
-          <el-form-item prop="name">
+          :rules="codeLoginRules" label-width="100px" hide-required-asterisk>
+          <el-form-item prop="mobile">
             <el-input prefix-icon="el-icon-mobile-phone" v-model="codeLoginForm.mobile"
-              placeholder="手机号">
+              placeholder="手机号" clearable>
             </el-input>
           </el-form-item>
           <!-- <el-form-item prop="password">
@@ -47,10 +47,10 @@
               show-password>
             </el-input>
           </el-form-item> -->
-          <el-form-item prop="" class="phone_code">
+          <el-form-item prop="phonecode" class="phone_code">
             <el-input prefix-icon="el-icon-lock" v-model="codeLoginForm.phonecode" placeholder="验证码"
-              maxlength="6" :style="{width: '70%'}"></el-input>
-            <GetPhoneCode />
+              maxlength="6" :style="{width: '70%'}" clearable></el-input>
+            <GetPhoneCode :mobile="codeLoginForm.mobile" />
           </el-form-item>
           <el-form-item>
             <drag-verify ref="dragVerifyRef" text="请按住滑块拖动解锁" successText="验证通过"
@@ -60,10 +60,10 @@
           </el-form-item>
           <el-form-item class="login-btn-form-item">
             <el-button class="login-btn" type="primary" :disabled="loginBtnDisabled"
-              @click="submitForm('loginForm')">登陆</el-button>
+              @click="submitForm('codeLoginForm')">登陆</el-button>
           </el-form-item>
-          <!-- <a href="#" @click="codeLogin" style="margin-right:30px;font-weight:700"><span
-              style="font-size:8pt">{{isCodeLogin ? '用户名密码登录' : '手机验证码登录'}}</span></a> -->
+          <a href="#" @click="codeLogin" style="margin-right:30px;font-weight:700"><span
+              style="font-size:8pt">{{isCodeLogin ? '用户名密码登录' : '手机验证码登录'}}</span></a>
           <a href="/Register"><span style="font-size:8pt">没有账号？立即注册</span></a>
         </el-form>
       </div>
@@ -111,6 +111,22 @@ export default {
             min: 5,
             max: 20,
             message: '长度在 5 到 20 个字符',
+            trigger: ['change', 'blur'],
+          },
+        ],
+      },
+      codeLoginRules: {
+        mobile: [
+          {
+            required: true,
+            message: '请输入手机号',
+            trigger: ['change', 'blur'],
+          },
+        ],
+        phonecode: [
+          {
+            required: true,
+            message: '请输入验证码',
             trigger: ['change', 'blur'],
           },
         ],
@@ -176,66 +192,77 @@ export default {
       this.$refs[formName].validate((valid) => {
         if (valid) {
           this.loading = true
-          login(this.loginForm)
+          let loginData = {}
+          if (formName == 'codeLoginForm') {
+            loginData = this.codeLoginForm
+          } else {
+            loginData = this.loginForm
+          }
+          login(loginData)
             .then((res) => {
-              globalFunction.setCookies('token', res.data.token)
-              // this.$store.state
-              // this.$store.dispatch('Login', res.data)
-              this.$refs[formName].resetFields()
-              queryAccount({ userId: res.data.userId })
-                .then((res) => {
-                  let { data } = res
-                  let { bizCrato } = data
-                  let userInfo = {}
-                  if (bizCrato) {
-                    userInfo = {
-                      name: data.name,
-                      mobile: data.mobile,
-                      userId: data.id,
-                      type: data.type,
-                      balance: data.balance,
-                      belong: data.belong,
-                      fixedSpace: bizCrato.fixedSpace,
-                      used: bizCrato.used,
-                      product: bizCrato.product,
-                      serviceType: bizCrato.serviceType,
-                      expiredTime: bizCrato.expiredTime,
+              if (res.data) {
+                globalFunction.setCookies('token', res.data.token)
+                // this.$store.state
+                // this.$store.dispatch('Login', res.data)
+                this.$refs[formName].resetFields()
+                queryAccount({ userId: res.data.userId })
+                  .then((res) => {
+                    let { data } = res
+                    let { bizCrato } = data
+                    let userInfo = {}
+                    if (bizCrato) {
+                      userInfo = {
+                        name: data.name,
+                        mobile: data.mobile,
+                        userId: data.id,
+                        type: data.type,
+                        balance: data.balance,
+                        belong: data.belong,
+                        fixedSpace: bizCrato.fixedSpace,
+                        used: bizCrato.used,
+                        product: bizCrato.product,
+                        serviceType: bizCrato.serviceType,
+                        expiredTime: bizCrato.expiredTime,
+                      }
+                      this.$notify({
+                        title: '成功',
+                        message: '登陆成功',
+                        type: 'success',
+                      })
+                      this.$store.commit('changeIsLogin', true)
+                      this.$store.commit('changeUserInfoObj', userInfo)
+                      this.loading = false
+                      this.$router.push({ path: '/' })
+                    } else {
+                      userInfo = {
+                        name: data.name,
+                        mobile: data.mobile,
+                        userId: data.id,
+                        type: data.type,
+                        balance: data.balance,
+                        belong: data.belong,
+                      }
+                      this.$notify({
+                        title: '成功',
+                        message: '登陆成功',
+                        type: 'success',
+                      })
+                      // sessionStorage.setItem('isLogin', true)
+                      // sessionStorage.setItem('userInfoObj', JSON.stringify(userInfo))
+                      this.$store.commit('changeIsLogin', true)
+                      this.$store.commit('changeUserInfoObj', userInfo)
+                      this.loading = false
+                      this.$router.push({ path: '/serviceOpen' })
                     }
-                    this.$notify({
-                      title: '成功',
-                      message: '登陆成功',
-                      type: 'success',
-                    })
-                    this.$store.commit('changeIsLogin', true)
-                    this.$store.commit('changeUserInfoObj', userInfo)
+                  })
+                  .catch((err) => {
+                    console.log(err)
                     this.loading = false
-                    this.$router.push({ path: '/' })
-                  } else {
-                    userInfo = {
-                      name: data.name,
-                      mobile: data.mobile,
-                      userId: data.id,
-                      type: data.type,
-                      balance: data.balance,
-                      belong: data.belong,
-                    }
-                    this.$notify({
-                      title: '成功',
-                      message: '登陆成功',
-                      type: 'success',
-                    })
-                    // sessionStorage.setItem('isLogin', true)
-                    // sessionStorage.setItem('userInfoObj', JSON.stringify(userInfo))
-                    this.$store.commit('changeIsLogin', true)
-                    this.$store.commit('changeUserInfoObj', userInfo)
-                    this.loading = false
-                    this.$router.push({ path: '/serviceOpen' })
-                  }
-                })
-                .catch((err) => {
-                  console.log(err)
-                  this.loading = false
-                })
+                  })
+              } else {
+                this.$message.error(res.description)
+                this.loading = false
+              }
             })
             .catch((error) => {
               console.log(error)
@@ -257,7 +284,7 @@ export default {
     align-items: center
     justify-content: center
     height: calc(100vh - 69px)
-    background: url('../assets/images/common/bg1.jpg') no-repeat
+    background: url('../assets/images/common/bg4.jpg') no-repeat
     // background: url("https://pan.baidu.com/static/images/16new/bg1.jpg");
     background-size: cover
     .form-wrapper

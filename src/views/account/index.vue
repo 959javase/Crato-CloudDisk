@@ -60,7 +60,8 @@
       :limit.sync="queryParams.pageSize" @pagination="getList" />
 
     <!-- 创建子账号对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
+    <el-dialog :title="title" :visible.sync="open" width="500px"
+      v-loading.fullscreen.lock="dialogLoading" append-to-body :close-on-click-modal="false">
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="用户名" prop="name">
           <el-input v-model="form.name" placeholder="请输入用户名" />
@@ -75,7 +76,7 @@
           <el-input v-model="form.mobile" placeholder="请输入手机号" />
         </el-form-item>
         <el-form-item label="账号归属" prop="belong">
-          <el-input v-model="form.belong" placeholder="请输入账号归属" disabled/>
+          <el-input v-model="form.belong" placeholder="请输入账号归属" disabled />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -85,7 +86,8 @@
     </el-dialog>
 
     <!-- 分配容量 -->
-    <el-dialog title="分配容量" :visible.sync="shareOpen" width="500px" append-to-body>
+    <el-dialog title="分配容量" :visible.sync="shareOpen" width="500px"
+      v-loading.fullscreen.lock="dialogLoading" append-to-body :close-on-click-modal="false">
       <el-form ref="shareForm" :model="shareForm" :rules="shareRules" label-width="80px">
         <el-form-item label="主账号" prop="fromName">
           <el-input v-model="shareForm.fromName" disabled />
@@ -117,6 +119,7 @@ export default {
   components: {},
   data() {
     return {
+      dialogLoading: false,
       // 遮罩层
       loading: true,
       // 选中数组
@@ -193,6 +196,7 @@ export default {
     // 取消按钮
     cancel() {
       this.open = false
+      this.shareOpen = false
       this.reset()
     },
     // 表单重置
@@ -255,13 +259,13 @@ export default {
         if (valid) {
           if (this.form.id != null) {
             updateCru(this.form).then((response) => {
-              this.msgSuccess('修改成功')
+              this.$message.success('修改成功')
               this.open = false
               this.getList()
             })
           } else {
             createSubAccount(this.form).then((response) => {
-              this.msgSuccess('新增成功')
+              this.$message.success('新增成功')
               this.open = false
               this.getList()
             })
@@ -273,8 +277,13 @@ export default {
     submitShareForm() {
       this.$refs['shareForm'].validate((valid) => {
         if (valid) {
+          this.dialogLoading = true
           shareSpace(this.shareForm).then((res) => {
-            console.log(res)
+            if (res.code == 0) {
+              this.$message.success('分配成功')
+              this.dialogLoading = false
+              this.shareOpen = false
+            }
           })
         }
       })
@@ -296,7 +305,7 @@ export default {
         })
         .then(() => {
           this.getList()
-          this.msgSuccess('删除成功')
+          this.$message.success('删除成功')
         })
     },
     /** 导出按钮操作 */

@@ -12,24 +12,24 @@
           :rules="registerFormRules" label-width="100px" hide-required-asterisk>
           <el-form-item prop="name">
             <el-input prefix-icon="el-icon-user" v-model="registerForm.name" placeholder="用户名"
-              @change="checkName">
+              @change="checkName" clearable>
             </el-input>
           </el-form-item>
           <el-form-item prop="password">
             <el-input prefix-icon="el-icon-lock" v-model="registerForm.password" placeholder="密码"
-              show-password></el-input>
+              show-password clearable></el-input>
           </el-form-item>
           <el-form-item prop="confirmPassword">
             <el-input prefix-icon="el-icon-lock" v-model="registerForm.confirmPassword"
-              placeholder="确认密码" show-password></el-input>
+              placeholder="确认密码" show-password clearable></el-input>
           </el-form-item>
           <el-form-item prop="mobile">
             <el-input prefix-icon="el-icon-mobile-phone" v-model="registerForm.mobile"
-              placeholder="手机号" @change="checkMobile"></el-input>
+              placeholder="手机号" @change="checkMobile" clearable></el-input>
           </el-form-item>
           <el-form-item prop="" class="phone_code">
             <el-input prefix-icon="el-icon-lock" v-model="registerForm.phonecode" placeholder="验证码"
-              maxlength="6" :style="{width: '70%'}"></el-input>
+              maxlength="6" :style="{width: '70%'}" clearable></el-input>
             <GetPhoneCode :mobile="registerForm.mobile" @getCode="getUuid" />
           </el-form-item>
           <el-form-item style="user-select: none">
@@ -229,33 +229,34 @@ export default {
           if (valid) {
             this.loading = true
             // 表单各项校验通过
-            checkSms({
-              phone: this.registerForm.mobile,
-              code: this.registerForm.phonecode,
-              uuid: this.uuid,
-            }).then((res) => {
-              if (res.code == 200) {
-                register(this.registerForm).then((res) => {
-                  if (res.code === 0) {
-                    this.$notify({
-                      title: '成功',
-                      message: '注册成功！已跳转到登录页面',
-                      type: 'success',
-                    })
-                    this.$refs[formName].resetFields()
-                    this.$router.replace({ path: '/login' })
-                  } else {
-                    this.submitDisabled = true
-                    this.isPassing = false
-                    this.$refs.dragVerifyRef.reset()
-                    this.$message.error(res.description)
-                  }
-                  this.loading = false
+            // checkSms({
+            //   phone: this.registerForm.mobile,
+            //   code: this.registerForm.phonecode,
+            //   uuid: this.uuid,
+            // }).then((res) => {
+            //   if (res.code == 200) {
+
+            //   } else {
+            //     this.loading = false
+            //     this.$message.error(res.msg)
+            //   }
+            // })
+            register(this.registerForm).then((res) => {
+              if (res.code === 0) {
+                this.$notify({
+                  title: '成功',
+                  message: '注册成功！已跳转到登录页面',
+                  type: 'success',
                 })
+                this.$refs[formName].resetFields()
+                this.$router.replace({ path: '/login' })
               } else {
-                this.loading = false
-                this.$message.error(res.msg)
+                this.submitDisabled = true
+                this.isPassing = false
+                this.$refs.dragVerifyRef.reset()
+                this.$message.error(res.description)
               }
+              this.loading = false
             })
           } else {
             this.$message.error('请正确填写用户注册信息！')
@@ -267,7 +268,7 @@ export default {
       }
     },
     getUuid(e) {
-      this.uuid = e
+      this.registerForm.uuid = e
     },
   },
 }

@@ -12,12 +12,12 @@
     </div>
     <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch"
       label-width="68px">
-      <el-form-item label="文件名" prop="title">
+      <el-form-item label="文件名" prop="fileName">
         <el-input v-model="queryParams.fileName" placeholder="请输入文件名" clearable size="small" />
       </el-form-item>
-      <el-form-item label="归属账号" prop="title">
+      <!-- <el-form-item label="归属账号" prop="name">
         <el-input v-model="queryParams.name" placeholder="请输入归属账号" clearable size="small" />
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索
         </el-button>
@@ -33,7 +33,7 @@
       </el-table-column>
       <el-table-column label="文件名" align="center" prop="fileName" :show-overflow-tooltip="true" />
       <el-table-column label="大小" align="center" prop="fileSize" />
-      <el-table-column label="CID" align="center" prop="cid" />
+      <el-table-column label="CID" align="center" prop="cid" :show-overflow-tooltip="true" />
       <el-table-column label="归属账号" align="center" prop="name" />
       <el-table-column label="成本" align="center" prop="cost" />
       <el-table-column label="创建日期" align="center" prop="dateTime" />
@@ -51,8 +51,8 @@
         </template>
       </el-table-column>
     </el-table>
-    <pagination v-show="fileList.length>0" :total="fileList.length" :page.sync="queryParams.pageNum"
-      :limit.sync="queryParams.pageSize" background />
+    <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum"
+      :limit.sync="queryParams.pageSize" background @pagination="getListFile" />
     <!-- 按次收费上传 -->
     <el-dialog :title="userServiceType == 0 ? '按次收费上传文件' : '上传文件'" :visible.sync="openUploadShow"
       center :close-on-click-modal="false" :show-close="false"
@@ -110,7 +110,9 @@
         <el-button @click="fileAbort">取消上传</el-button>
         <el-button type="primary" @click="getOrderSateActive">已付费上传</el-button>
       </div>
-      <div v-if="userServiceType == 1" slot="footer" class="dialog-footer">
+      <div v-if="userServiceType == 1" slot="footer" class="dialog-footer"
+        v-loading.fullscreen.lock="ipfsLoading" element-loading-text="IPFS解析文件中"
+        element-loading-spinner="el-icon-loading" element-loading-background="rgba(0, 0, 0, 0.8)">
         <el-button @click="fileAbort">取消上传</el-button>
         <el-button type="primary" @click="fileUpload">上传文件</el-button>
       </div>
@@ -130,6 +132,9 @@
         <el-button type="primary" @click="getOrderSateActive">已付款</el-button>
       </span>
     </el-dialog> -->
+    <el-dialog :visible.sync="processShow" center :close-on-click-modal="false">
+      <el-progress :text-inside="true" :stroke-width="26" :percentage="70"></el-progress>
+    </el-dialog>
   </div>
 </template>
 
@@ -162,6 +167,8 @@ export default {
       openUploadShow: false,
       // 遮罩层
       loading: false,
+      ipfsLoading: false,
+      ipfsUpLoading: '',
       // 选中数组
       ids: [],
       // 非单个禁用
@@ -217,6 +224,8 @@ export default {
       payTag: false,
       // 上传文件列表
       uploadFileList: [],
+      // 上传进度dialog
+      processShow: false,
     }
   },
   computed: {
@@ -260,6 +269,7 @@ export default {
       this.loading = true
       listFile(this.queryParams).then((res) => {
         this.fileList = res.rows
+        this.total = res.total
         this.loading = false
       })
     },
@@ -271,9 +281,8 @@ export default {
         .then((res) => {
           const { data } = res
           // this.decooToken = data.data
-          this.headers.useraccesstoken = data.Data
+          this.headers.UserAccessToken = data.Data
           console.log('3 useraccesstoken成功')
-          this.fileUpload()
         })
         .catch((err) => {
           console.log(err)
@@ -299,6 +308,7 @@ export default {
     },
     fileUpload() {
       this.$refs.upload.submit()
+      console.log('11点击了上传')
     },
     fileAbort() {
       this.uploadFileList = []
@@ -320,10 +330,20 @@ export default {
     },
     // 上传文件前：需要获取文件cid、secret
     async beforeUpload(file) {
+      console.log('22上传之前')
+      await this.getDecooToken()
+
       // 重置付款成功标识
       this.payTag = false
       // 获取文件cid
+      this.ipfsLoading = true
       const cid = await getFileCid(file)
+      this.ipfsLoading = false
+      // getFileCid(file).then(res => {
+      //   console.log(res);
+      // }).catch(err => {
+      //   console.log(err);
+      // })
       this.datas.cid = cid
       // 获取secret
       this.datas.secret = crypto
@@ -334,7 +354,7 @@ export default {
       }
       localStorage.setItem('cid', this.datas.cid)
 
-      addFile({
+      await addFile({
         // 账号名称 name
         name: this.userInfo.name,
         // fileName
@@ -359,6 +379,13 @@ export default {
               type: 'info',
             })
               .then(() => {
+                this.openUploadShow = false
+                this.ipfsUpLoading = this.$loading({
+                  lock: true,
+                  text: '文件上传中',
+                  spinner: 'el-icon-loading',
+                  background: 'rgba(0, 0, 0, 0.8)',
+                })
                 return resolve(true)
               })
               .catch(() => {
@@ -372,7 +399,6 @@ export default {
           })
         }
       })
-      // await this.getDecooToken()
     },
     // 手动获取订单状态
     getOrderSateActive() {
@@ -403,7 +429,7 @@ export default {
           // this.dialogPay = false
           // this.dialogLoading = true
           this.getDecooToken()
-          console.log('2付款成功，下将上传订单添加到数据库')
+          console.log('2付款成功，将上传订单添加到数据库')
         } else {
           clearTimeout(this.getOrderStateTimer)
           this.getOrderStateTimer = ''
@@ -423,12 +449,14 @@ export default {
     fileUploadSuccess(res, file) {
       if (file.status == 'success') {
         this.openUploadShow = false
+        this.ipfsUpLoading.close()
         this.$message({
           type: 'success',
           message: '文件上传成功!',
         })
         // TODO:将订单状态修改为已上传完成
         console.log('6修改上传状态为已完成上传')
+        this.uploadFileList = []
         localStorage.removeItem('cid')
       }
     },

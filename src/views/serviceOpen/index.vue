@@ -133,11 +133,8 @@ export default {
   },
   computed: {
     ...mapState(['user']),
-
   },
-  watch: {
-
-  },
+  watch: {},
 
   methods: {
     // 生成二维码时

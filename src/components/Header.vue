@@ -26,11 +26,15 @@
       :destroy-on-close="true" :wrapperClosable="true" show-close size=260>
       <div class="drawer-wrap">
         <div class="drawer-wrap_header">
-          <el-avatar src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"
-            size="large"></el-avatar>
-          <div class="name" style="">{{userInfo.name}}</div>
-          <el-button type="primary" size="mini" @click="expand(1)">扩容</el-button>
-          <el-button type="primary" size="mini" @click="expand(2)">延期</el-button>
+          <div class="avatar_wrap">
+            <el-avatar src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"
+              size="large"></el-avatar>
+            <div class="name" style="">{{userInfo.name}}</div>
+          </div>
+          <div class="btn_wrap">
+            <el-button type="primary" size="mini" @click="expand(1)">扩容</el-button>
+            <el-button type="primary" size="mini" @click="expand(2)">延期</el-button>
+          </div>
 
         </div>
         <div class=" drawer-wrap_content">
@@ -52,14 +56,13 @@
           </el-descriptions>
           <el-progress v-if="userInfo.serviceType == 1" :percentage="storagePercentage"
             :color="customColors"></el-progress>
-
         </div>
         <div class="drawer-wrap_about">
           <el-collapse v-model="activeName" accordion>
             <el-collapse-item title="功能" name="1">
-              <div>安全的加密存储</div>
+              <div>安全存储</div>
               <div>防盗链</div>
-              <div>防篡改加密合同</div>
+              <div>防篡改</div>
             </el-collapse-item>
             <el-collapse-item title="服务" name="2">
               <div>API接入</div>
@@ -68,14 +71,14 @@
               <!-- <div>NashCloud致力于区块链分布式存储技术研发的科技公司，以区块链技术为核心，为客户提供一站式分布式存储解决方案。</div> -->
               <div>NashCloud纳什信息科技致力于分布式存储生态建设，产品主要应用于分布式存储的一站式解决方案、赋能区块链技术生态，并努力建立更好的商业模式。</div>
             </el-collapse-item>
-            <el-collapse-item title="反馈" name="4">
+            <!-- <el-collapse-item title="反馈" name="4">
               <div>
                 <el-input type="textarea" placeholder="请输入建议或反馈" v-model="textarea" maxlength="30"
                   show-word-limit>
                 </el-input>
                 <el-button type="text">提交</el-button>
               </div>
-            </el-collapse-item>
+            </el-collapse-item> -->
           </el-collapse>
         </div>
         <div class="drawer-wrap_footer">
@@ -471,10 +474,13 @@ export default {
   padding-top: 0
   .drawer-wrap_header
     display: flex
-    align-items: center
-    // justify-content: center
-    .name
-      margin: 0 10px
+    flex-direction: column
+    .avatar_wrap
+      display: flex
+      align-items: center
+    .btn_wrap
+      margin-top: 10px
+      display: flex
   .drawer-wrap_content
     margin-top: 20px
   .drawer-wrap_about
@@ -486,9 +492,9 @@ export default {
   box-shadow: $tabBoxShadow
   display: flex
   .logo
-    margin: 14px 24px 0 24px
+    margin: 0 24px
     display: inline-block
-    height: 55px
+    height: 70px
     cursor: pointer
   >>> .el-menu--horizontal
     .el-menu-item:not(.is-disabled):hover

@@ -11,11 +11,11 @@
         <!-- <i class="el-icon-picture"></i> -->
         <span slot="title">文件列表</span>
       </el-menu-item>
-      <el-menu-item index="account" :route="{ name: 'account' }">
+      <el-menu-item v-if="this.userInfo.type == 'admin'" index="account" :route="{ name: 'account' }">
         <!-- <i class="el-icon-picture"></i> -->
         <span slot="title">账户管理</span>
       </el-menu-item>
-       <!-- <i class="el-icon-picture"></i> -->
+      <!-- <i class="el-icon-picture"></i> -->
       <!-- <el-menu-item index="cost" :route="{ name: 'cost' }">
        
         <span slot="title">费用管理</span>
@@ -76,6 +76,7 @@
 </template>
 
 <script>
+import { mapGetters, mapState } from 'vuex'
 export default {
   name: 'SideMenu',
   data() {
@@ -96,6 +97,8 @@ export default {
       // return String(this.$route.query.fileType) //  获取当前路由参数中包含的文件类型
       return String(this.$route.name)
     },
+    ...mapState(['user']),
+    ...mapGetters(['isLogin']),
     // 存储容量
     // storageValue() {
     //   //getstorage
@@ -118,7 +121,12 @@ export default {
   },
   created() {
     this.isCollapse = this.getCookies('isCollapse') === 'true' //  读取保存的状态
-    console.log(this.$route.name)
+    if (!this.isLogin) return
+    this.userInfo = JSON.parse(this.user.userInfoObj)
+    this.userInfo.expiredTime = this.userInfo.expiredTime.slice(0, 10)
+    // 更新用户数据
+    this.$store.dispatch('getUserInfo', this.userInfo.userId)
+    console.log(this.userInfo)
   },
 }
 </script>
@@ -128,12 +136,12 @@ export default {
 @import '~@/assets/styles/mixins.styl'
 .side-menu-wrapper
   // border: 1px red solid
-  display :flex
-  flex-direction :column
-  overflow :hidden
+  display: flex
+  flex-direction: column
+  overflow: hidden
   // position: relative
   height: calc(100vh - 77px)
-  width :200px
+  width: 200px
   // padding-right: 11px
   margin-top: 15px
   // margin-left: 30px
@@ -142,13 +150,13 @@ export default {
     // 高度设置为屏幕高度减去顶部导航栏的高度
     // height: calc(100vh - 137px)
     height: 100%
-    width :100%
+    width: 100%
     overflow: auto
     // 调整滚动条样式
     setScrollbar(6px, #909399, #EBEEF5)
   // 对展开状态下的菜单设置宽度
   // .side-menu:not(.el-menu--collapse)
-  //   width: 200px
+  // width: 200px
   // 存储空间展示区
   .storage-wrapper
     border: 1px yellow solid
