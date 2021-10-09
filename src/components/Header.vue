@@ -69,7 +69,7 @@
             </el-collapse-item>
             <el-collapse-item title="关于公司" name="3">
               <!-- <div>NashCloud致力于区块链分布式存储技术研发的科技公司，以区块链技术为核心，为客户提供一站式分布式存储解决方案。</div> -->
-              <div>NashCloud纳什信息科技致力于分布式存储生态建设，产品主要应用于分布式存储的一站式解决方案、赋能区块链技术生态，并努力建立更好的商业模式。</div>
+              <div>Crato致力于分布式存储生态建设，产品主要应用于分布式存储的一站式解决方案、赋能区块链技术生态，并努力建立更好的商业模式。</div>
             </el-collapse-item>
             <!-- <el-collapse-item title="反馈" name="4">
               <div>
@@ -249,7 +249,7 @@ export default {
     // this.$store.dispatch('getUserInfo',)
     // TODO 需要在每个页面对用户 余额 和容量信息更新 需要发送请求，修改getUserInfo
     this.userInfo = JSON.parse(this.user.userInfoObj)
-    this.userInfo.expiredTime = this.userInfo.expiredTime.slice(0, 10)
+    this.userInfo.expiredTime = this.userInfo.expiredTime ? this.userInfo.expiredTime.slice(0, 10) : ''
     // 更新用户数据
     this.$store.dispatch('getUserInfo', this.userInfo.userId)
     console.log(this.userInfo)

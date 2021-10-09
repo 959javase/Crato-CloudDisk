@@ -1,32 +1,23 @@
 <template>
   <div id="global-uploader">
     <!-- 上传文件组件 -->
-    <uploader
-      class="uploader-app"
-      ref="uploader"
-      :options="options"
-      :autoStart="false"
-      :fileStatusText="fileStatusText"
-      @file-added="handleFileAdded"
-      @file-success="handleFileSuccess"
-      @file-error="handleFileError"
-    >
+    <uploader class="uploader-app" ref="uploader" :options="options" :autoStart="false"
+      :fileStatusText="fileStatusText" @file-added="handleFileAdded"
+      @file-success="handleFileSuccess" @file-error="handleFileError">
       <uploader-unsupport></uploader-unsupport>
       <!-- 选择按钮 在这里隐藏 -->
       <uploader-btn class="select-file-btn" :attrs="attrs" ref="uploadBtn">选择文件</uploader-btn>
       <!-- 拖拽上传 -->
-      <uploader-drop
-        class="drop-box"
-        id="dropBox"
-        @paste.native="handlePaste"
-        v-show="dropBoxShow">
+      <uploader-drop class="drop-box" id="dropBox" @paste.native="handlePaste" v-show="dropBoxShow">
         <div class="paste-img-wrapper" v-show="pasteImg.src">
           <div class="paste-name">{{ pasteImg.name }}</div>
           <img class="paste-img" :src="pasteImg.src" :alt="pasteImg.name" v-if="pasteImg.src" />
         </div>
         <span class="text" v-show="!pasteImg.src"> 截图粘贴或将文件拖拽至此区域上传 </span>
-        <i class="upload-icon el-icon-upload" v-show="pasteImg.src" @click="handleUploadPasteImg">上传图片</i>
-        <i class="delete-icon el-icon-delete" v-show="pasteImg.src" @click="handleDeletePasteImg">删除图片</i>
+        <i class="upload-icon el-icon-upload" v-show="pasteImg.src"
+          @click="handleUploadPasteImg">上传图片</i>
+        <i class="delete-icon el-icon-delete" v-show="pasteImg.src"
+          @click="handleDeletePasteImg">删除图片</i>
         <i class="close-icon el-icon-circle-close" @click="dropBoxShow = false">关闭</i>
       </uploader-drop>
       <!-- 上传列表 -->
@@ -38,30 +29,25 @@
                 上传列表<span class="count">（{{ props.fileList.length }}）</span>
               </span>
               <div class="operate">
-                <el-button
-                  type="text"
-                  :title="collapse ? '展开' : '折叠'"
+                <el-button type="text" :title="collapse ? '展开' : '折叠'"
                   :icon="collapse ? 'el-icon-full-screen' : 'el-icon-minus'"
-                  @click="collapse ? (collapse = false) : (collapse = true)"
-                >
+                  @click="collapse ? (collapse = false) : (collapse = true)">
                 </el-button>
-                <el-button @click="handleClosePanel" type="text" title="关闭" icon="el-icon-close"> </el-button>
+                <el-button @click="handleClosePanel" type="text" title="关闭" icon="el-icon-close">
+                </el-button>
               </div>
             </div>
             <!-- 正在上传的文件列表 -->
             <el-collapse-transition>
               <ul class="file-list" v-show="!collapse">
-                <li
-                  class="file-item"
-                  :class="{ 'custom-status-item': file.statusStr !== '' }"
-                  v-for="file in props.fileList"
-                  :key="file.id"
-                >
+                <li class="file-item" :class="{ 'custom-status-item': file.statusStr !== '' }"
+                  v-for="file in props.fileList" :key="file.id">
                   <uploader-file ref="fileItem" :file="file" :list="true"></uploader-file>
                   <!-- 自定义状态 -->
                   <span class="custom-status">{{ file.statusStr }}</span>
                 </li>
-                <div class="no-file" v-if="!props.fileList.length"><i class="icon-empty-file"></i> 暂无待上传文件</div>
+                <div class="no-file" v-if="!props.fileList.length"><i class="icon-empty-file"></i>
+                  暂无待上传文件</div>
               </ul>
             </el-collapse-transition>
           </div>
@@ -72,7 +58,6 @@
 </template>
 
 <script>
-
 import SparkMD5 from 'spark-md5'
 import FileCrypto from '@/common/crypto-f.js'
 import Crypto from '@/common/crypto-m.js'
@@ -87,12 +72,12 @@ export default {
         maxChunkRetries: 3, //  并发上传数，默认 3, min 3
         testChunks: true, //  是否开启分片已存在于服务器的校验
         // 分片校验
-        checkChunkUploadedByResponse: function(chunk, message) {
+        checkChunkUploadedByResponse: function (chunk, message) {
           let objMessage = JSON.parse(message)
           if (objMessage.success) {
             let data = objMessage.data
             // let max = this.$store.state.sideMenu.maxStorage
-            // let cur = this.$store.state.sideMenu.storageValue 
+            // let cur = this.$store.state.sideMenu.storageValue
             // if(cur + chunk > max){
             //   this.$message.error('剩余容量不足')
             // }
@@ -104,22 +89,20 @@ export default {
           }
         },
         headers: {
-          token: this.getCookies('token')
+          token: this.getCookies('token'),
         },
-        query() {
-      
-        }
+        query() {},
       },
-     
+
       fileStatusText: {
         success: '上传成功',
         error: 'error',
         uploading: '上传中',
         paused: '暂停中',
-        waiting: '等待中'
+        waiting: '等待中',
       },
       attrs: {
-        accept: '*'
+        accept: '*',
       },
       panelShow: false, //  上传文件面板是否显示
       collapse: false, //	上传文件面板是否折叠
@@ -127,21 +110,21 @@ export default {
       // 粘贴图片的信息
       pasteImg: {
         src: '',
-        name: ''
+        name: '',
       },
-      pasteImgObj: null ,//  粘贴图片 File 对象
+      pasteImgObj: null, //  粘贴图片 File 对象
       fileKey: null,
-      isEncrypto:false,
+      isEncrypto: false,
     }
   },
   computed: {
     // Uploader	上传组件实例
     uploaderInstance() {
       return this.$refs.uploader.uploader
-    }
+    },
   },
   mounted() {
-    this.$EventBus.$on('openUploader', (query, type ,isEncrypto) => {
+    this.$EventBus.$on('openUploader', (query, type, isEncrypto) => {
       this.isEncrypto = isEncrypto
       this.options.headers.token = this.getCookies('token')
       this.params = query || {}
@@ -165,9 +148,16 @@ export default {
       if (pasteItems && pasteItems.length) {
         // 获取剪切板中最新的对象
         let imgObj = pasteItems[0].getAsFile()
-        this.pasteImgObj = imgObj !== null ? new File([imgObj], `share_${new Date().valueOf()}.${imgObj.name.split('.')[1]}`, {
-          type: imgObj.type
-        }) : null
+        this.pasteImgObj =
+          imgObj !== null
+            ? new File(
+                [imgObj],
+                `share_${new Date().valueOf()}.${imgObj.name.split('.')[1]}`,
+                {
+                  type: imgObj.type,
+                }
+              )
+            : null
       } else {
         this.$message.error('当前浏览器不支持')
         return false
@@ -181,7 +171,7 @@ export default {
       // 如果需要预览，可以执行下面代码
       let reader = new FileReader()
       let _this = this
-      reader.onload = function(event) {
+      reader.onload = function (event) {
         _this.pasteImg.src = event.target.result
       }
       reader.readAsDataURL(this.pasteImgObj)
@@ -205,17 +195,16 @@ export default {
       this.panelShow = true
       this.collapse = false
       file.pause()
-      if(this.isEncrypto){
-      console.log('加密');
-      this.fileKey = FileCrypto.generateKey()
-      file.statusStr = '文件加密中'
-      FileCrypto.encryptFile(file , this.fileKey).then(()=>{
-      this.computeMD5(file)
-     })
-      }else{
+      if (this.isEncrypto) {
+        console.log('加密')
+        this.fileKey = FileCrypto.generateKey()
+        file.statusStr = '文件加密中'
+        FileCrypto.encryptFile(file, this.fileKey).then(() => {
           this.computeMD5(file)
+        })
+      } else {
+        this.computeMD5(file)
       }
-
     },
     /**
      * 文件上传成功 回调函数
@@ -252,17 +241,20 @@ export default {
     handleFileError(rootFile, file, response) {
       this.$message({
         message: response,
-        type: 'error'
+        type: 'error',
       })
     },
     /**
-     * 
+     *
      *计算md5，实现断点续传及秒传
      * @param {object} file 文件信息
      */
     computeMD5(file) {
       let fileReader = new FileReader()
-      let blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice
+      let blobSlice =
+        File.prototype.slice ||
+        File.prototype.mozSlice ||
+        File.prototype.webkitSlice
       let currentChunk = 0
       const chunkSize = 1 * 1024 * 1024
       let chunks = Math.ceil(file.size / chunkSize)
@@ -272,20 +264,20 @@ export default {
         let res = e.target.result
         spark.append(res)
         if (currentChunk < chunks) {
-            currentChunk++
-            loadNext()
-            file.statusStr = `校验 ${((currentChunk / chunks) * 100).toFixed(0)}%`
+          currentChunk++
+          loadNext()
+          file.statusStr = `校验 ${((currentChunk / chunks) * 100).toFixed(0)}%`
         } else {
           let md5 = spark.end()
           this.calculateFileMD5End(md5, file)
         }
       }
-      fileReader.onerror = function() {
+      fileReader.onerror = function () {
         this.$notify({
           title: '错误',
           message: `文件${file.name}读取出错，请检查该文件`,
           type: 'error',
-          duration: 2000
+          duration: 2000,
         })
         file.cancel()
       }
@@ -302,19 +294,21 @@ export default {
      * @param {object} file 文件对象
      */
     calculateFileMD5End(md5, file) {
-      if(this.fileKey != null){
-      this.params.fileKey =  Crypto.encryptAes(  localStorage.getItem('mk') , this.fileKey)
-      }else{
+      if (this.fileKey != null) {
+        this.params.fileKey = Crypto.encryptAes(
+          localStorage.getItem('mk'),
+          this.fileKey
+        )
+      } else {
         this.params.fileKey = null
       }
 
-      console.log( this.params.fileKey);
+      console.log(this.params.fileKey)
       //将自定义参数直接加载uploader实例的opts上
       Object.assign(this.uploaderInstance.opts, {
         query: {
-          ...this.params
-        }
-
+          ...this.params,
+        },
       })
 
       file.uniqueIdentifier = md5
@@ -329,242 +323,160 @@ export default {
     handleClosePanel() {
       this.uploaderInstance.cancel()
       this.panelShow = false
-    }
-  }
+    },
+  },
 }
 </script>
 
 <style lang="stylus" scoped>
-@import '~@/assets/styles/varibles.styl';
-@import '~@/assets/styles/mixins.styl';
-
-#global-uploader {
-  position: fixed;
-  z-index: 20;
-  right: 15px;
-  bottom: 15px;
-
-  .drop-box {
-    position: fixed;
-    z-index: 19;
-    top: 0;
-    left: 0;
-    border: 5px dashed #8091a5 !important;
-    background: #ffffffd9;
-    color: #8091a5 !important;
-    text-align: center;
-    box-sizing: border-box;
-    height: 100%;
-    line-height: 100%;
-    width: 100%;
-
-    .text {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 100%;
-      transform: translate(-50%, -50%);
-      font-size: 30px;
-    }
-
-    .upload-icon {
-      position: absolute;
-      right: 176px;
-      top: 16px;
-      cursor: pointer;
-
-      &:hover {
-        color: $Primary;
-      }
-    }
-
-    .delete-icon {
-      position: absolute;
-      right: 80px;
-      top: 16px;
-      cursor: pointer;
-
-      &:hover {
-        color: $Danger;
-      }
-    }
-
-    .close-icon {
-      position: absolute;
-      right: 16px;
-      top: 16px;
-      cursor: pointer;
-
-      &:hover {
-        color: $Success;
-      }
-    }
-
-    .paste-img-wrapper {
-      width: 100%;
-      height: 100%;
-    }
-
-    .paste-img {
-      margin-top: 16px;
-      max-width: 90%;
-      max-height: 80%;
-    }
-
-    .paste-name {
-      height: 24px;
-      line-height: 24px;
-      font-size: 18px;
-      color: $PrimaryText;
-    }
-  }
-
-  .uploader-app {
-    width: 560px;
-  }
-
-  .file-panel {
-    background-color: #fff;
-    border: 1px solid #e2e2e2;
-    border-radius: 7px 7px 0 0;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-
-    .file-title {
-      display: flex;
-      height: 40px;
-      line-height: 40px;
-      padding: 0 15px;
-      border-bottom: 1px solid #ddd;
-
-      .title-span {
-        padding-left: 0;
-        margin-bottom: 0;
-        font-size: 16px;
-
-        .count {
-          color: $SecondaryText;
-        }
-      }
-
-      .operate {
-        flex: 1;
-        text-align: right;
-
-        >>> .el-button--text {
-          color: $PrimaryText;
-
-          i[class^=el-icon-] {
-            font-weight: 600;
-          }
-
-          &:hover {
-            .el-icon-full-screen, .el-icon-minus {
-              color: $Success;
-            }
-
-            .el-icon-close {
-              color: $Danger;
-            }
-          }
-        }
-      }
-    }
-
-    .file-list {
-      position: relative;
-      height: 240px;
-      overflow-x: hidden;
-      overflow-y: auto;
-      background-color: #fff;
-      font-size: 12px;
-      setScrollbar(8px, #EBEEF5, #C0C4CC);
-
-      .file-item {
-        position: relative;
-        background-color: #fff;
-
-        >>> .uploader-file {
-          height: 40px;
-          line-height: 40px;
-
-          .uploader-file-progress {
-            border: 1px solid $Success;
-            border-right: none;
-            border-left: none;
-            background: #e1f3d8;
-          }
-
-          .uploader-file-name {
-            width: 44%;
-          }
-
-          .uploader-file-size {
-            width: 16%;
-          }
-
-          .uploader-file-meta {
-            display: none;
-          }
-
-          .uploader-file-status {
-            width: 30%;
-            text-indent: 0;
-          }
-
-          .uploader-file-actions>span {
-            margin-top: 12px;
-          }
-        }
-
-        >>> .uploader-file[status='success'] {
-          .uploader-file-progress {
-            border: none;
-          }
-        }
-      }
-
-      .file-item.custom-status-item {
-        >>> .uploader-file-status {
-          visibility: hidden;
-        }
-
-        .custom-status {
-          position: absolute;
-          top: 0;
-          right: 10%;
-          width: 24%;
-          height: 40px;
-          line-height: 40px;
-        }
-      }
-    }
-
-    &.collapse {
-      .file-title {
-        background-color: #E7ECF2;
-      }
-    }
-  }
-
-  .no-file {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 16px;
-  }
-
-  /deep/.uploader-file-icon {
-    display: none;
-  }
-
-  /deep/.uploader-file-actions > span {
-    margin-right: 6px;
-  }
-}
-
+@import '~@/assets/styles/varibles.styl'
+@import '~@/assets/styles/mixins.styl'
+#global-uploader
+  position: fixed
+  z-index: 20
+  right: 15px
+  bottom: 15px
+  .drop-box
+    position: fixed
+    z-index: 19
+    top: 0
+    left: 0
+    border: 5px dashed #8091a5 !important
+    background: #ffffffd9
+    color: #8091a5 !important
+    text-align: center
+    box-sizing: border-box
+    height: 100%
+    line-height: 100%
+    width: 100%
+    .text
+      position: absolute
+      top: 50%
+      left: 50%
+      width: 100%
+      transform: translate(-50%, -50%)
+      font-size: 30px
+    .upload-icon
+      position: absolute
+      right: 176px
+      top: 16px
+      cursor: pointer
+      &:hover
+        color: $Primary
+    .delete-icon
+      position: absolute
+      right: 80px
+      top: 16px
+      cursor: pointer
+      &:hover
+        color: $Danger
+    .close-icon
+      position: absolute
+      right: 16px
+      top: 16px
+      cursor: pointer
+      &:hover
+        color: $Success
+    .paste-img-wrapper
+      width: 100%
+      height: 100%
+    .paste-img
+      margin-top: 16px
+      max-width: 90%
+      max-height: 80%
+    .paste-name
+      height: 24px
+      line-height: 24px
+      font-size: 18px
+      color: $PrimaryText
+  .uploader-app
+    width: 560px
+  .file-panel
+    background-color: #fff
+    border: 1px solid #e2e2e2
+    border-radius: 7px 7px 0 0
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2)
+    .file-title
+      display: flex
+      height: 40px
+      line-height: 40px
+      padding: 0 15px
+      border-bottom: 1px solid #ddd
+      .title-span
+        padding-left: 0
+        margin-bottom: 0
+        font-size: 16px
+        .count
+          color: $SecondaryText
+      .operate
+        flex: 1
+        text-align: right
+        >>> .el-button--text
+          color: $PrimaryText
+          i[class^=el-icon-]
+            font-weight: 600
+          &:hover
+            .el-icon-full-screen, .el-icon-minus
+              color: $Success
+            .el-icon-close
+              color: $Danger
+    .file-list
+      position: relative
+      height: 240px
+      overflow-x: hidden
+      overflow-y: auto
+      background-color: #fff
+      font-size: 12px
+      setScrollbar(8px, #EBEEF5, #C0C4CC)
+      .file-item
+        position: relative
+        background-color: #fff
+        >>> .uploader-file
+          height: 40px
+          line-height: 40px
+          .uploader-file-progress
+            border: 1px solid $Success
+            border-right: none
+            border-left: none
+            background: #e1f3d8
+          .uploader-file-name
+            width: 44%
+          .uploader-file-size
+            width: 16%
+          .uploader-file-meta
+            display: none
+          .uploader-file-status
+            width: 30%
+            text-indent: 0
+          .uploader-file-actions>span
+            margin-top: 12px
+        >>> .uploader-file[status='success']
+          .uploader-file-progress
+            border: none
+      .file-item.custom-status-item
+        >>> .uploader-file-status
+          visibility: hidden
+        .custom-status
+          position: absolute
+          top: 0
+          right: 10%
+          width: 24%
+          height: 40px
+          line-height: 40px
+    &.collapse
+      .file-title
+        background-color: #E7ECF2
+  .no-file
+    position: absolute
+    top: 50%
+    left: 50%
+    transform: translate(-50%, -50%)
+    font-size: 16px
+  /deep/.uploader-file-icon
+    display: none
+  /deep/.uploader-file-actions > span
+    margin-right: 6px
 /* 隐藏上传按钮 */
-.select-file-btn {
-  display: none;
-}
+.select-file-btn
+  display: none
 </style>
