@@ -251,7 +251,6 @@ import VueQr from 'vue-qr'
 import {
   addFile,
   listFile,
-  openCrato,
   createOrder,
   getWxPay,
   queryOrderState,
