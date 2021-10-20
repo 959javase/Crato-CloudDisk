@@ -516,7 +516,7 @@ export default {
           this.dialogLoading = false
           this.openServiceShow = false
           this.$message.success('支付成功，正在上传文件')
-          this.getDecooToken()
+          this.fileUpload()
         } else {
           this.dialogLoading = false
           this.$message.error('查询订单支付失败，请确认是否付款')
